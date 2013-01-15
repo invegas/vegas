@@ -1,0 +1,30 @@
+doctype 5
+html
+ head
+  title 文章列表
+  include ../head
+  body(class= "#{title}")
+   div.container
+    div.row
+     div.span3
+      include ../secondary
+     div.span8.offset1
+      form.form-horizontal(action="/saveBlog", method="post")
+        legend 文章列表
+        table.table.table-hover.table-striped.table-bordered.table-show
+         thead
+          th 时间
+          th 中文标题       
+          th 内容
+          th 管理
+         tbody
+          for blog in blogs
+           tr 
+            td= method.outputDate(blog.date)
+            td 
+             a(href='/blog/#{blog.title}') #{blog.title.substr(0, 10)}...
+            td #{blog.content.substr(0, 12)} 	
+            td
+             div.btn-group
+              a.btn.btn-small(href="/admin/blog/#{blog.title}/edit") 编辑
+              a.btn.btn-small(href="/admin/blog/delete/#{blog._id}") 删除

@@ -1,0 +1,67 @@
+doctype 5
+html
+ head
+  title #{blog.title}
+  link(rel="stylesheet", type="text/css", href="/css/bootstrap.css")
+  link(rel="stylesheet", type="text/css", href="/css/style-blog.css")
+  link(rel="stylesheet", type="text/css", href="/prettify/sunburst.css")
+  script(type="text/javascript", src="/prettify/prettify.js")  
+- var contenteditable = false;
+- if (router.action && router.action == "edit") { 
+- contenteditable = true;
+- }
+ body(data-id= "#{blog._id}", data-category="#{blog.category}", class="category-blog")
+  - if (router.action) {
+  div.modal
+   div.modal-header
+    - if (router.action == "edit") {
+    h3 编辑
+    - } else if (router.action == "delete") {
+    h3 删除
+    - }
+    
+   div.modal-body
+    p 时间
+    input#pulishDate(type="date")
+    p 分类选择
+    select#category
+     option(value="front-end") front-end
+     option(value="nodejs") node.js
+     option(value="other") other
+    - if (router.action == "delete") {
+      span 确定删除吗？
+    - }
+   div.modal-footer
+    - if (router.action == "edit") {
+    button.btn.pull-left.edit-end 放弃修改
+    button.btn.btn-primary.pull-right.edit-save 保存
+    span.label.label-success.save-status-success.pull-right 保存成功
+    span.label.label-warning.save-status-failed.pull-right 编辑失败      
+    - } else if (router.action == "delete") {
+    a.btn.pull-left.delete-cancel(href="/blog/#{blog.title}") 取消
+    a.btn.btn-primary.pull-right.delete-confirm(href="/admin/blog/delete/#{blog._id}") 确定删除
+    - }
+  - }
+  div.container(contenteditable= contenteditable)
+    include ../logo
+    div.row
+     div.span1
+     - var para = blog.content;
+     div.span6
+      h3.title(data-origin="#{blog.title}") #{blog.title}
+      span.info-date #{method.outputDate(blog.date)}
+      span.pull-right.label.info-tag #{blog.category}
+      span.label.pull-right
+      hr.margin-top-10
+      div.content
+       | !{para}
+      hr
+      div.comment
+        include comment
+     div.span4
+      include panel
+     div.span1
+  script(type="text/javascript", src="/js/jquery-1.8.3.min.js")  
+  script(type="text/javascript", src="/js/bootstrap.js")  
+  script(type="text/javascript", src="/js/blog.js")
+

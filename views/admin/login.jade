@@ -1,0 +1,29 @@
+doctype 5
+html
+ head
+  title 登陆
+  link(rel="stylesheet", type="text/css", href="/css/bootstrap.css")
+  link(rel="stylesheet", type="text/css", href="/css/style-blog.css")
+  link(rel="stylesheet", type="text/css", href="/prettify/sunburst.css")
+  script(type="text/javascript", src="/prettify/prettify.js")      
+ body
+  div.container
+   include ../logo
+   div.row
+    div.span1
+    div.span6
+     form.form-horizontal(method="post", action="/login")
+      div.control-group
+       label.control-label 用户名
+       div.controls
+        input(type="text", name="username")
+      div.control-group
+       label.control-label 密码
+       div.controls
+        input(type="password", name="password")
+      div.control-group
+       div.controls
+        button.btn(type="submit") 登陆
+    div.span4
+     include ../blog/panel
+    div.span1

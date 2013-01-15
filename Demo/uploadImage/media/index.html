@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Upload Test</title>
+	<style type="text/css">
+		#file-upload {
+			/*display: none;*/
+		}
+	</style>
+</head>
+<body>
+	<form action="/upload" enctype="multipart/form-data" method="post">
+		<label for="file-upload">click me for image upload</label>
+		<!-- <input type="file" name="image" id="file-upload" multiple> -->
+		<input type="file" name="image" id="file-upload">
+		<input type="submit" value="confirm">
+	</form>
+</body>
+</html>

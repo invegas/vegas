@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Add Article</title>
+	<link rel="stylesheet" type="text/css" href="css/bootstrap.css">
+	<style type="text/css">
+		body {
+			font-family: "微软雅黑";
+		}
+	</style>
+</head>
+<body>
+	<div class="container">
+		<div class="row">
+			<div class="span6">
+				<form class="form-horizontal" action="/blogadd" method="post">
+					<legend>添加文章</legend>
+				  	<div class="control-group">
+				    	<label class="control-label" for="">英文标题</label>
+				    	<div class="controls">
+				      		<input type="text" placeholder="英文标题" name="title_en" autofocus>
+				    	</div>
+				  	</div>
+
+				  	<div class="control-group">
+				    	<label class="control-label" for="">中文标题</label>
+				    	<div class="controls">
+				      		<input type="text" placeholder="中文标题" name="title_cn">
+				    	</div>
+				  	</div>
+
+				  	<div class="control-group">
+				    	<label class="control-label" for="">内容</label>
+				    	<div class="controls">
+				      		<textarea name="content"></textarea>
+				    	</div>
+				  	</div>
+
+				  	<div class="control-group">
+				    	<label class="control-label" for="">分类</label>
+				    	<div class="controls">
+				    		<select id="select-category" name="category">
+				    			<option value="javascript">javascript</option>
+				    			<option value="nodejs">node.js</option>
+				    			<option value="other">other</option>
+				    		</select>
+				    	</div>
+				  	</div>
+				  	
+				  	<hr>
+				  	<div class="control-group">
+				  		<div class="controls">
+				  			<input class="btn btn-primary pull-right" type="submit" value="确定添加">
+				  		</div>				  		
+				  	</div>
+
+				</form>				
+			</div>
+			<div class="span6"></div>
+		</div>
+	</div>
+	<script type="text/javascript" src="js/jquery-1.8.3.min.js"></script>
+	<script type="text/javascript">
+	</script>
+</body>
+</html>

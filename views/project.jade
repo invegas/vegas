@@ -1,0 +1,44 @@
+doctype 5
+html
+ head
+  title 我制作的大玩意
+  link(rel="stylesheet", type="text/css", href="/css/bootstrap.css")
+  link(rel="stylesheet", type="text/css", href="/css/style-blog.css")
+  link(rel="stylesheet", type="text/css", href="/prettify/sunburst.css")
+  script(type="text/javascript", src="/prettify/prettify.js")      
+ body
+  div.container
+   include logo
+   div.row
+    div.span1
+    div.span6
+     div.project-item
+      h4 Bao博客引擎
+      hr.margin-top-10.margin-bottom-10
+      p 现在你看到的这个博客就是用这个Bao引擎做的。这算我对node.js + mongo结合探索的产物。我喜欢干净，在页面上你看不到最新的文章推荐，最新评论，云标签等各种噪音，所需要的只是关注眼前的文章。专注，思考吧
+      hr.margin-top-10.margin-bottom-10
+      a.default(href="/") 你看到的就已经是啦
+     div.project-item
+      h4 HTML5 长微博工具
+      hr.margin-top-10.margin-bottom-10
+      p 这是一个ckeditor和html2canvas的合体，严格来说我只起了一点撮合的作用，个人觉得这个长微博会比那些个长微博工具强大很多，当然前提是你的浏览器支持HTML5
+      hr.margin-top-10.margin-bottom-10
+      a.default(href="/project/longweibo/index.html", target="_blank") Demo 
+      a.default.margin-left-10(href="https://github.com/hh54188/longweibo", target="_blank") @github
+     div.project-item
+      h4 PPT Wall
+      hr.margin-top-10.margin-bottom-10
+      p
+      | 一个受到 
+      a.default(href="http://lab.hakim.se/reveal-js/#/", target="_blank") reveal.js
+      | 和
+      a.default(href="http://bartaz.github.com/impress.js/#/bored", target="_blank") reveal.js
+      | 启发所做出来的东西，两边的一些想法都借鉴了.在没有使用过keynote之前，已经对泛滥而没有水准的ppt厌恶了，以上两个形式的ppt触动了我的神经——何不合二为一?By the way,Chrome only
+      hr.margin-top-10.margin-bottom-10
+      a.default(href="/project/pptwall/index.html", target="_blank") Demo 
+      a.default.margin-left-10(href="https://github.com/hh54188/slider-demo", target="_blank") @github   
+    div.span4
+     include blog/panel
+    div.span1
+  script(type="text/javascript", src="/js/jquery-1.8.3.min.js") 
+  script(type="text/javascript", src="/js/bootstrap.js")  

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Updatae MongoDB</title>
+	<link rel="stylesheet" type="text/css" href="css/bootstrap.css">
+</head>
+<body>
+	<div class="container">
+	<input type="text" id="name-save">
+
+		<input class="btn btn-small" type="button" value="save" id="btn-save">
+		<br>
+		<input type="text" id="name-delete">
+		<input class="btn btn-small" type="button" value="delete" id="btn-delete">
+		<br>
+		<input type="text" id="name-update">
+		<input class="btn btn-small" type="button" value="update" id="btn-update">
+		<br>
+		<input class="btn btn-small" type="button" value="find" id="btn-find">
+		<input class="btn btn-small" type="button" value="show" id="btn-show">
+
+		<input class="btn btn-small" type="button" value="new collection" id="btn-newCollection">		
+	</div>
+
+
+	<script type="text/javascript" src="js/jquery-1.8.3.min.js"></script>
+	<script type="text/javascript">
+		var save = function (name) {
+			$.ajax({
+				url: '/save',				
+				type: 'post',	
+				data: {
+					"name": name,
+				}
+			})
+		}
+
+		var show = function () {
+			$.ajax({
+				url: '/show',				
+				type: 'get'
+			})
+		}
+
+		var find = function () {
+			$.ajax({
+				url: '/find',				
+				type: 'post',	
+				data: {
+					"name": "lee",
+				}
+			})
+		}
+
+		var update = function (val) {
+			$.ajax({
+				url: '/update',
+				type: 'post',
+				data: {
+					age: val
+				}
+			})
+		}
+
+		var deleteDB = function (name) {
+			$.ajax({
+				url: '/delete',
+				type: 'post',
+				data: {
+					name: name
+				}
+			})
+		}
+
+		var newCollection = function () {
+			$.ajax({
+				url: "/newCollection",
+				type: "get"
+			})
+		}
+
+		$('#btn-find').on('click', function () {
+			find();
+		})
+
+		$('#btn-show').on('click', function () {
+			show();
+		})
+
+		$('#btn-update').on('click', function () {
+			var val = document.querySelector("#name-update").value;
+			update(val);
+		})
+
+		$('#btn-save').on('click', function () {
+			var val = document.querySelector('#name-save').value;
+			save(val);
+		})
+
+		$('#btn-delete').on('click', function () {
+			var val = document.querySelector('#name-delete').value;
+			deleteDB(val);
+		})
+
+		$('#btn-newCollection').on('click', function () {
+			newCollection();
+		})
+	</script>
+</body>
+</html>

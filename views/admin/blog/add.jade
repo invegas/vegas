@@ -1,0 +1,46 @@
+doctype 5
+html
+ head
+  title 添加文章
+  include ../head
+  body(class= "#{title}")
+   div.container
+    div.row
+     div.span3
+       include ../secondary
+     div.span8.offset1
+      div.pull-left.panel-primary
+       form.form-horizontal(action="/saveBlog", method="post")
+        legend 添加文章
+        div.control-group
+         label.control-label 中文标题
+         div.controls
+          input(type="text", placeholder="中文标题", name="title", autofocus="true")
+
+        div.control-group
+         label.control-label 内容
+         div.controls
+          textarea(placeholder="文章内容", name="content")
+
+        div.control-group
+         label.control-label 分类
+         div.controls
+          select#select-category(name="category")
+           option(value="front-end") front-end
+           option(value="nodejs") node.js
+           option(value="other") other
+
+        div.control-group
+         label.control-label 自定义创建时间
+         div.controls
+          label.checkbox.inline.pull-left
+           input#enablePublishDate(type="checkbox", name="enablePublishDate")
+           | 启用
+
+          input#publishDate.input-medium.pull-right(type="date", name="publishDate")
+
+        hr
+
+        div.control-group
+         div.controls
+          input.btn.btn-primary.pull-right(type="submit", value="确定添加")

@@ -1,0 +1,48 @@
+﻿<!DOCTYPE html>
+<html>
+	<title>ckEditor Event Test</title>
+	<head>
+		<link rel="stylesheet" type="text/css" href="css/bootstrap.css">
+	</head>
+	<body>
+		<div class="container">
+			<hr>			
+			<button class="btn btn-small">Test</button>			
+			<hr>
+			<textarea class="ckeditor1" id="ckeditor1" name="ckeditor1"></textarea>
+		</div>
+		<script type="text/javascript" src="js/jquery-1.7.2.min.js"></script>
+		<script type="text/javascript" src="plugin/ckeditor.js"></script>
+		<script type="text/javascript">
+			var config = {
+				font_names:"微软雅黑/'微软雅黑', Arial/Arial, Helvetica, sans-serif;Comic Sans MS/Comic Sans MS, cursive;Courier New/Courier New, Courier, monospace;Georgia/Georgia, serif;Lucida Sans Unicode/Lucida Sans Unicode, Lucida Grande, sans-serif;Tahoma/Tahoma, Geneva, sans-serif;Times New Roman/Times New Roman, Times, serif;Trebuchet MS/Trebuchet MS, Helvetica, sans-serif;Verdana/Verdana, Geneva, sans-serif",
+				height: '200px',
+				resize_enabled: false,
+				autoGrow_maxHeight: 600,
+				skin:'moono'
+			}
+			var instance = CKEDITOR.replace('ckeditor1', config);
+			//预先置入文本
+			instance.setData('<p>This test is set by <u>setData function</u>.</p>');
+
+			var p = new CKEDITOR.htmlDataProcessor(instance);
+
+			//仅在光标选中的位置插入
+			// instance.insertHtml( '<p>This is a new paragraph.</p>' );
+			// instance.insertText( 'line1 \n\n line2');
+
+			//单机输出内容
+			$('.btn').click(function () {
+				var html = "<p>This is <b>an example</b>.</p>";
+				var data = instance.dataProcessor.toDataFormat(html);
+				console.log(data);
+
+				// var html = '<p>This is <b>an example</b>.</p>';
+				// console.log(p.toDataFormat(html));
+
+				// var input = instance.getData();
+				// console.log(input);
+			})
+		</script>		
+	</body>
+</html>

@@ -1,0 +1,29 @@
+doctype 5
+html
+ head
+  title= title
+  link(rel="stylesheet", type="text/css", href="css/bootstrap.css")
+  style(type="text/css") body{ font-family: "微软雅黑"; text-overflow: ellipsis;}
+  body
+   div.container  
+    div.row
+     div.span6
+      h1 My Site - #{title}
+      table.table.table-hover.table-striped.table-bordered.table-show
+       thead
+        th 中文标题       
+        th 英文标题
+        th 管理
+       tbody
+        for blog in blogs
+         tr 
+          td 
+           a(href='/show/#{blog.title_en}') #{blog.title_cn.substr(0, 10)}...
+          td #{blog.title_en.substr(0, 10)} 	
+          td
+           div.btn-group
+            a.btn.btn-small(href="#") 编辑
+            a.btn.btn-small(href="#") 删除
+
+     div.span6
+  script(type="text/javascript", src="js/jquery-1.8.3.min.js")
