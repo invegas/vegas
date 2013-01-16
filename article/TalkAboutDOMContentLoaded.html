@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>从onload和DOMContentLoaded谈起</title>
+	<link rel="stylesheet" type="text/css" href="css/bootstrap.css">
+<!-- 	<link rel="stylesheet" type="text/css" href="prettify/prettify.css"> -->
+	<link rel="stylesheet" type="text/css" href="prettify/sunburst.css">
+	<script type="text/javascript" src="prettify/prettify.js"></script>	
+	<style type="text/css">
+		body {
+			font-family: '微软雅黑';
+		}
+	</style>
+</head>
+<body onload="prettyPrint()">
+	<div class="container">
+		<div class="row">
+			<div class="span1"></div>
+			<div class="span6">
+				<h3>谈谈onload和DOMContentLoaded</h3>
+			</div>
+			<div class="span4"></div>
+			<div class="span1"></div>
+		</div>		
+		<div class="row">
+			<div class="span1"></div>
+			<div class="span6">
+				<p>这两个事件有什么用处？</p>
+				<p>在页面开发中我们通常需要给一些元素的事件绑定处理函数。但问题是，如果那个元素还没有加载到页面上，但是绑定已经执行完了，想当然这是没有效果的。这两个事件大致就是用来避免这样一种情况，保证能在页面的某些元素加载完毕之后再执行需要的代码。<code>onload</code>和<code>DOMContentLoaded</code>的区别在于：</p>
+				<ul>
+					<li>onload:当整个页面被加载时触发，包括所有的样式，脚本，图片。</li>
+					<li>DOMContenLoaded：仅当DOM树被加载完成之后，不包括样式，图片。<strong>注意，因为它需要加载的资源较少，它触发的时机会比onload要早。</strong></li>
+				</ul>
+				<p>但考虑到不同浏览器对这两个事件的触发条件，触发时产生的副作用，与之相关的兼容性问题等，还需要费一点功夫来做一些总结和说明的。</p>
+				<p>再研究几个问题</p>
+				<p><strong>DOMContentLoaded的出发时间点</strong></p>
+				<p>对大多数的脚本来说脚本在样式表加载之后再执行不是没有意义的，因为有的脚本可能需要通过样式列表来了解元素的尺寸，位置和颜色等。事实上DOMContentLoaded事件的发生也的确会把样式的加载考虑进去，这取决于脚本在网页中的位置。</p>	
+				<p>的确有一些列外是Gecko和Webkit 引擎的浏览器会在DOMContentLoaded事件触发之前首先对样式表进行加载，最常见的例子是<code>&lt;link rel="stylesheet"&gt;</code>之后紧跟一个外链的脚本<code>&lt;script src=""&gt;</script></code>：
+					<pre class="prettyprint lang-javascript">
+&lt;!DOCTYPE html&gt;
+&lt;head&gt;
+&lt;link rel="stylesheet" href="stylesheet.css"&gt;
+&lt;script src="script.js"&gt;&lt;/script&gt;
+&lt;/head>
+&lt;body>
+&lt;div id="element"&gt;The element&lt;/div&gt;
+&lt;/body&gt;</pre>
+				无论是把脚本的链接至于html的哪一个部位，只要脚本位于链接之后，及时加载样式花了10秒钟的时间， DOMContentLoaded也会等样式加载完毕之后再出发（在Opera中例外）。
+				</p>			
+				<p><strong>样式的加载会阻塞脚本的执行</strong></p>
+			</div>
+			<div class="span4"></div>
+			<div class="span1"></div>
+		</div>
+	</div>
+	<script type="text/javascript" src="js/bootstrap.js"></script>
+</body>
+</html>
