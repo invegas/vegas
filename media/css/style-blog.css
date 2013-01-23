@@ -26,7 +26,7 @@ span[class^=save-status]{
 }
 .logo {
 	height: 260px;
-	background: url('img/logo.png') no-repeat center center;
+	background: url('/img/logo.png') no-repeat center center;
 	text-indent: -9999px;
 }
 .save-status-success, .save-status-failed {

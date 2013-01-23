@@ -1,6 +1,8 @@
 doctype 5
 html
  head
+  <meta name="" content="个人的node.js 前端知识总结"/>
+  meta(name="description", content="")
   title #{title}
   link(rel="stylesheet", type="text/css", href="/css/bootstrap.css")
   link(rel="stylesheet", type="text/css", href="/css/style-blog.css")
@@ -8,8 +10,7 @@ html
   script(type="text/javascript", src="/prettify/prettify.js")      
  body
   div.container
-    div.row
-     h1.span12.logo 轻薄
+    include ../logo
     div.row
      div.span7.content 
       - if (blogs.length != 0) {

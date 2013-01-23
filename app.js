@@ -29,7 +29,7 @@ app.configure(function () {
 })
 
 
-app.listen(process.env.VCAP_APP_PORT || 3000);
+app.listen(process.env.VCAP_APP_PORT || 8000);
 
 // Passport session setup
 passport.serializeUser(function(user, done) {
