@@ -24,9 +24,10 @@ span[class^=save-status]{
 .margin-right-10 {
 	margin-bottom: 10px;
 }
-
 .logo {
 	height: 260px;
+	background: url('img/logo.png') no-repeat center center;
+	text-indent: -9999px;
 }
 .save-status-success, .save-status-failed {
 	display: none;
