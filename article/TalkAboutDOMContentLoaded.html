@@ -17,7 +17,7 @@
 		<div class="row">
 			<div class="span1"></div>
 			<div class="span6">
-				<h3>谈谈onload和DOMContentLoaded</h3>
+				<h3>从onload和DOMContentLoaded开始</h3>
 			</div>
 			<div class="span4"></div>
 			<div class="span1"></div>
@@ -25,6 +25,45 @@
 		<div class="row">
 			<div class="span1"></div>
 			<div class="span6">
+				<p>当<code>onload</code>事件触发时，页面上所有的DOM，样式表，脚本，图片，flash都已经加载完成了。</p>
+				<p>当<code>DOMContentLoaded</code>事件触发时，仅当DOM加载完成，不包括样式表，图片。</p>
+				<p>我们需要给一些元素的事件绑定处理函数。但问题是，如果那个元素还没有加载到页面上，但是绑定已经执行完了，想当然这是没有效果的。这两个事件大致就是用来避免这样一种情况，将绑定的函数放在这两个事件的回调中，保证能在页面的某些元素加载完毕之后再执行需要的代码。</p>
+				<p>更重要的是，DOMContentLoaded机制更加合理，因为我们可以容忍图片延迟加载，却不可以容忍看见内容后页面不可交互</p>
+				<p>在没有出现DOMContentLoaded事件出现以前，许多类库中都有模拟这个事件的方法，比如jQuery中著名的<code>$(document).ready(function(){});</code>。稍后把各个类库中总结DOMcontentLoaded的方法整理一下</p>
+				<p>接下来看一些DOMContentLoaded的边界情况</p>
+				<p>虽然文档称该事件仅当在DOM加载完成之后触发，实际上并非如此</p>
+				<p>在某些版本的Gecko和Webkit引擎的浏览器中，有些情况会使等待样式表加载完成后才触发DOMContentLoaded事件。最普遍的情况是<code>&lt;script src=""&gt;</code>跟在一个<code>&lt;link rel="stylesheet"&gt;</code>之后，无论这个script标签是在head还是在body中，只要跟在link的后面。比下面这个栗子</p>
+				<p>Html: </p>
+					<pre class="prettyprint lang-html">
+&lt;!DOCTYPE html&gt;
+&lt;head&gt;
+&lt;link rel="stylesheet" href="stylesheet.css"&gt;
+&lt;script src="script.js"&gt;&lt;/script&gt;
+&lt;/head>
+&lt;body>
+&lt;div id="element"&gt;The element&lt;/div&gt;
+&lt;/body&gt;</pre>
+<p>stylesheet.css:</p>
+<pre class="prettyprint lang-css">
+#element { color: red; }
+</pre>
+<p>script.js</p>
+<pre class="prettyprint lang-javascript">
+document.addEventListener('DOMContentLoaded', function () {
+	// should read #FF0000 or rgb(255, 0, 0)
+	alert(getComputedStyle(document.getElementById('element'), null).color);
+}, false);
+</pre>
+
+
+
+
+
+
+
+
+
+
 				<p>这两个事件有什么用处？</p>
 				<p>在页面开发中我们通常需要给一些元素的事件绑定处理函数。但问题是，如果那个元素还没有加载到页面上，但是绑定已经执行完了，想当然这是没有效果的。这两个事件大致就是用来避免这样一种情况，保证能在页面的某些元素加载完毕之后再执行需要的代码。<code>onload</code>和<code>DOMContentLoaded</code>的区别在于：</p>
 				<ul>
@@ -48,6 +87,11 @@
 				无论是把脚本的链接至于html的哪一个部位，只要脚本位于链接之后，及时加载样式花了10秒钟的时间， DOMContentLoaded也会等样式加载完毕之后再出发（在Opera中例外）。
 				</p>			
 				<p><strong>样式的加载会阻塞脚本的执行</strong></p>
+
+
+
+
+
 			</div>
 			<div class="span4"></div>
 			<div class="span1"></div>
