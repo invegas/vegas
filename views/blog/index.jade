@@ -4,13 +4,10 @@ html
   <meta name="" content="个人的node.js 前端知识总结"/>
   meta(name="description", content="")
   title #{title}
-  link(rel="stylesheet", type="text/css", href="/css/bootstrap.css")
-  link(rel="stylesheet", type="text/css", href="/css/style-blog.css")
-  link(rel="stylesheet", type="text/css", href="/prettify/sunburst.css")
-  script(type="text/javascript", src="/prettify/prettify.js")      
+  include component/head
  body
   div.container
-    include ../logo
+    include component/logo
     div.row
      div.span7.content 
       - if (blogs.length != 0) {
@@ -27,9 +24,7 @@ html
         p 抱歉 此分类下暂时没有任何文章
       - }
      div.span4
-      include panel
+      include component/panel
      div.span1
-  script(type="text/javascript", src="/js/jquery-1.8.3.min.js")  
-  script(type="text/javascript", src="/js/bootstrap.js")  
-  script(type="text/javascript", src="/js/blog.js")
+
 

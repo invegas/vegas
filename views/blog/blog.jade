@@ -2,10 +2,7 @@ doctype 5
 html
  head
   title #{blog.title}
-  link(rel="stylesheet", type="text/css", href="/css/bootstrap.css")
-  link(rel="stylesheet", type="text/css", href="/css/style-blog.css")
-  link(rel="stylesheet", type="text/css", href="/prettify/sunburst.css")
-  script(type="text/javascript", src="/prettify/prettify.js")  
+  include component/head  
 - var contenteditable = false;
 - if (router.action && router.action == "edit") { 
 - contenteditable = true;
@@ -43,7 +40,7 @@ html
     - }
   - }
   div.container(contenteditable= contenteditable)
-    include ../logo
+    include component/logo
     div.row
      div.span1
      - var para = blog.content;
@@ -57,11 +54,9 @@ html
        | !{para}
       hr
       div.comment
-        include comment
+        include component/comment
      div.span4
       include panel
      div.span1
-  script(type="text/javascript", src="/js/jquery-1.8.3.min.js")  
-  script(type="text/javascript", src="/js/bootstrap.js")  
-  script(type="text/javascript", src="/js/blog.js")
+
 

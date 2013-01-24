@@ -1,14 +1,10 @@
 doctype 5
 html
  head
-  title 关于我和这个博客
-  link(rel="stylesheet", type="text/css", href="/css/bootstrap.css")
-  link(rel="stylesheet", type="text/css", href="/css/style-blog.css")
-  link(rel="stylesheet", type="text/css", href="/prettify/sunburst.css")
-  script(type="text/javascript", src="/prettify/prettify.js")      
+  title 关于我和这个博客   
  body
   div.container
-   include logo
+   include component/logo
    div.row
     div.span1
     div.span6
@@ -48,7 +44,5 @@ html
      p 应该看什么样的书，走什么样的路，学什么
      p 啥也不多说了，因为我相信你比我更了解你自己。
     div.span4
-     include blog/panel
+     include component/panel
     div.span1
-  script(type="text/javascript", src="/js/jquery-1.8.3.min.js") 
-  script(type="text/javascript", src="/js/bootstrap.js")  

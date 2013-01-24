@@ -2,13 +2,9 @@ doctype 5
 html
  head
   title 我制作的大玩意
-  link(rel="stylesheet", type="text/css", href="/css/bootstrap.css")
-  link(rel="stylesheet", type="text/css", href="/css/style-blog.css")
-  link(rel="stylesheet", type="text/css", href="/prettify/sunburst.css")
-  script(type="text/javascript", src="/prettify/prettify.js")      
  body
   div.container
-   include logo
+   include component/logo
    div.row
     div.span1
     div.span6
@@ -38,7 +34,5 @@ html
       a.default(href="/project/pptwall/index.html", target="_blank") Demo 
       a.default.margin-left-10(href="https://github.com/hh54188/slider-demo", target="_blank") @github   
     div.span4
-     include blog/panel
+     include component/panel
     div.span1
-  script(type="text/javascript", src="/js/jquery-1.8.3.min.js") 
-  script(type="text/javascript", src="/js/bootstrap.js")  
