@@ -3,7 +3,6 @@
 <head>
 	<title>从onload和DOMContentLoaded谈起</title>
 	<link rel="stylesheet" type="text/css" href="css/bootstrap.css">
-<!-- 	<link rel="stylesheet" type="text/css" href="prettify/prettify.css"> -->
 	<link rel="stylesheet" type="text/css" href="prettify/sunburst.css">
 	<script type="text/javascript" src="prettify/prettify.js"></script>	
 	<style type="text/css">
@@ -30,8 +29,10 @@
 				<p>我们需要给一些元素的事件绑定处理函数。但问题是，如果那个元素还没有加载到页面上，但是绑定已经执行完了，想当然这是没有效果的。这两个事件大致就是用来避免这样一种情况，将绑定的函数放在这两个事件的回调中，保证能在页面的某些元素加载完毕之后再执行需要的代码。</p>
 				<p>更重要的是，DOMContentLoaded机制更加合理，因为我们可以容忍图片延迟加载，却不可以容忍看见内容后页面不可交互</p>
 				<p>在没有出现DOMContentLoaded事件出现以前，许多类库中都有模拟这个事件的方法，比如jQuery中著名的<code>$(document).ready(function(){});</code>。稍后把各个类库中总结DOMcontentLoaded的方法整理一下</p>
-				<p>接下来看一些DOMContentLoaded的边界情况</p>
-				<p>虽然文档称该事件仅当在DOM加载完成之后触发，实际上并非如此</p>
+				<br>
+				<br>
+				<p><strong>接下来看一些DOMContentLoaded的边界情况</strong></p>
+				<p><strong>虽然文档称该事件仅当在DOM加载完成之后触发，实际上并非如此</strong></p>
 				<p>在某些版本的Gecko和Webkit引擎的浏览器中，有些情况会使等待样式表加载完成后才触发DOMContentLoaded事件。最普遍的情况是<code>&lt;script src=""&gt;</code>跟在一个<code>&lt;link rel="stylesheet"&gt;</code>之后，无论这个script标签是在head还是在body中，只要跟在link的后面。比下面这个栗子</p>
 				<p>Html: </p>
 					<pre class="prettyprint lang-html">
@@ -50,46 +51,19 @@
 <p>script.js</p>
 <pre class="prettyprint lang-javascript">
 document.addEventListener('DOMContentLoaded', function () {
-	// should read #FF0000 or rgb(255, 0, 0)
 	alert(getComputedStyle(document.getElementById('element'), null).color);
 }, false);
 </pre>
+				<p>你可以尝试强制使服务器端使style延迟加载一段时间，测试的结果是，在某些版本的Firefox，Chrome，Safari中最后一段脚本是可以读出style的属性值，比如#FF0000或者rgb(255, 0, 0)，而这验证了我上面的说法，而在opera中却无法读出style的属性。</p>
+				<p>把脚本外链把样式外链之后已经是一种通用的作法，甚至在jquery的官方文档中也是这样推荐的</p>
+				<p>其实对大部分脚本来说，这样的脚本等待外链的机制还是有意义的，比如一些DOM和样式操作需要读取元素的位置，颜色等。这就需要样式先于脚本加载</p>
+				<br>
+				<br>
+				<p><strong>加载样式表会阻塞外链脚本的执行</strong></p>
+				<p>一些Gecko和Webkit引擎版本的浏览器，包括IE8在内，会同时发起多个Http请求来并行下在样式表和脚本。但<strong>脚本不会被执行，直到样式被加载完成。在未加载完之前甚至页面也不会被渲染。</strong>你可以在一些浏览器的开发工具中验证这个想法。</p>
+				<p><strong>但是在opera中样式的加载不会阻塞脚本的执行。</strong>有一些类库中模拟dom ready的行为中会把这个“意外”修正为何Chrome他们类似。</p>
 
-
-
-
-
-
-
-
-
-
-				<p>这两个事件有什么用处？</p>
-				<p>在页面开发中我们通常需要给一些元素的事件绑定处理函数。但问题是，如果那个元素还没有加载到页面上，但是绑定已经执行完了，想当然这是没有效果的。这两个事件大致就是用来避免这样一种情况，保证能在页面的某些元素加载完毕之后再执行需要的代码。<code>onload</code>和<code>DOMContentLoaded</code>的区别在于：</p>
-				<ul>
-					<li>onload:当整个页面被加载时触发，包括所有的样式，脚本，图片。</li>
-					<li>DOMContenLoaded：仅当DOM树被加载完成之后，不包括样式，图片。<strong>注意，因为它需要加载的资源较少，它触发的时机会比onload要早。</strong></li>
-				</ul>
-				<p>但考虑到不同浏览器对这两个事件的触发条件，触发时产生的副作用，与之相关的兼容性问题等，还需要费一点功夫来做一些总结和说明的。</p>
-				<p>再研究几个问题</p>
-				<p><strong>DOMContentLoaded的出发时间点</strong></p>
-				<p>对大多数的脚本来说脚本在样式表加载之后再执行不是没有意义的，因为有的脚本可能需要通过样式列表来了解元素的尺寸，位置和颜色等。事实上DOMContentLoaded事件的发生也的确会把样式的加载考虑进去，这取决于脚本在网页中的位置。</p>	
-				<p>的确有一些列外是Gecko和Webkit 引擎的浏览器会在DOMContentLoaded事件触发之前首先对样式表进行加载，最常见的例子是<code>&lt;link rel="stylesheet"&gt;</code>之后紧跟一个外链的脚本<code>&lt;script src=""&gt;</script></code>：
-					<pre class="prettyprint lang-javascript">
-&lt;!DOCTYPE html&gt;
-&lt;head&gt;
-&lt;link rel="stylesheet" href="stylesheet.css"&gt;
-&lt;script src="script.js"&gt;&lt;/script&gt;
-&lt;/head>
-&lt;body>
-&lt;div id="element"&gt;The element&lt;/div&gt;
-&lt;/body&gt;</pre>
-				无论是把脚本的链接至于html的哪一个部位，只要脚本位于链接之后，及时加载样式花了10秒钟的时间， DOMContentLoaded也会等样式加载完毕之后再出发（在Opera中例外）。
-				</p>			
-				<p><strong>样式的加载会阻塞脚本的执行</strong></p>
-
-
-
+				<p>附带一句，在Explorer和Gecko中，样式的加载同样也会阻塞直接写在页面上的脚本的执行（脚本接在样式表中）。在Webkit和Opera中页面上的脚本会被立即执行。</p>
 
 
 			</div>
