@@ -24,6 +24,8 @@
 		<div class="row">
 			<div class="span1"></div>
 			<div class="span6">
+				<p>这篇文章是对这一两年内几篇dom ready文章的汇总（文章的最后会标注参考文章），因为浏览器进化的关系，可能他们现在的行为与本文所谈到的一些行为不相符。我也并没有一一去验证，所以本文仅供参考，在具体开发中还是要以实践结果为准。</p>
+				<hr>
 				<p>当<code>onload</code>事件触发时，页面上所有的DOM，样式表，脚本，图片，flash都已经加载完成了。</p>
 				<p>当<code>DOMContentLoaded</code>事件触发时，仅当DOM加载完成，不包括样式表，图片。</p>
 				<p>我们需要给一些元素的事件绑定处理函数。但问题是，如果那个元素还没有加载到页面上，但是绑定已经执行完了，想当然这是没有效果的。这两个事件大致就是用来避免这样一种情况，将绑定的函数放在这两个事件的回调中，保证能在页面的某些元素加载完毕之后再执行需要的代码。</p>
@@ -64,7 +66,52 @@ document.addEventListener('DOMContentLoaded', function () {
 				<p><strong>但是在opera中样式的加载不会阻塞脚本的执行。</strong>有一些类库中模拟dom ready的行为中会把这个“意外”修正为何Chrome他们类似。</p>
 
 				<p>附带一句，在Explorer和Gecko中，样式的加载同样也会阻塞直接写在页面上的脚本的执行（脚本接在样式表中）。在Webkit和Opera中页面上的脚本会被立即执行。</p>
-
+				<hr>
+				<p><strong>谈第二个问题，各大javascript框架式如何实现自己的dom ready事件的？</strong></p>
+				<p>我先把他们常用的一些办法告诉大家，再贴出他们的代码，看他们具体是如何操作的。</p>
+				<p>我们先从高级浏览器看起。</p>
+				<ul><li>如果是webkit引擎则轮询document的readyState属性，当值为loaded或者complete时则触发DOMContentLoaded事件</li></ul>
+<pre  class="prettyprint lang-javascript">
+if (Browser.Engine.webkit) {  
+	timer = window.setInterval(function() {  
+	if (/loaded|complete/.test(document.readyState))  
+  	fireContentLoadedEvent();  
+}, 0);</pre>				
+				<ul><li>对webkit引擎还有一个办法是因为webkit在525以上的版本中开始引入了DOMContentLoaded事件，那么你可以对webkit的引擎版本进行判断，如果在525之下就用上面轮询的办法，如果在525之上，则直接注册DOMContentLoaded事件吧。</li></ul>
+				<ul><li>因为DOMContentLoaded事件最早其实是firefox的私有事件，而后其他的浏览器才开始引入这一事件。所以对火狐浏览器无需多余的处理</li></ul>
+				<p><strong>最麻烦的IE来了！</strong></p>
+				<ul><li><strong>方法一：</strong>在页面临时插入一个script元素，并设置defer属性，最后把该脚本加载完成视作DOMContentLoaded事件来触发。</li></ul>
+				<pre class="prettyprint lang-javascript">
+document.write("<"+"script id=__onDOMContentLoaded defer src=//:><\/script>");  
+$("__onDOMContentLoaded").onreadystatechange = function() {  
+  if (this.readyState == "complete") {  
+    this.onreadystatechange = null;  
+    fireContentLoadedEvent();  
+  }  
+}; </pre>
+	<p>但这样做有一个问题是，如果插入脚本的页面包含iframe的话，会等到iframe加载完才触发，其实这与onload是无异的。</p>
+				<ul><li><strong>方法二：</strong>通过setTiemout来不断的调用documentElement的doScroll方法，直到调用成功则出触发DOMContentLoaded</li></ul>
+				<pre class="prettyprint lang-javascript">
+var temp = document.createElement('div');  
+(function(){  
+    ($try(function(){  
+        temp.doScroll('left');  
+        return $(temp).inject(document.body).set('html', 'temp').dispose();  
+    })) ? domready() : arguments.callee.delay(50);  
+})();</pre>
+			<p>这样做的原理是
+<blockquote>
+  <p><small>在IE下，DOM的某些方法只有在DOM解析完成后才可以调用，doScroll就是这样一个方法，反过来当能调用doScroll的时候即是DOM解析完成之时，与prototype中的document.write相比，该方案可以解决页面有iframe时失效的问题。</small></p>
+</blockquote>
+			</p>
+			<ul><li><strong>方法三：</strong>首先注册document的onreadystatechange事件，但经测试后该犯方法与window.onload相当</li></ul>
+			<pre class="prettyprint lang-javascript">
+document.attachEvent("onreadystatechange", function(){  
+	if ( document.readyState === "complete" ) {  
+		document.detachEvent( "onreadystatechange", arguments.callee );  
+		jQuery.ready();  
+	}  
+});</pre>
 
 			</div>
 			<div class="span4"></div>
