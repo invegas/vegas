@@ -65,7 +65,20 @@ mongo.connectToDB(mongo.initBlog);
 //router
 //index
 app.get('/', function (req, res) {
-	res.redirect('/blog');
+	var renderBlogList = function (res, blogs) {
+		res.render("blog/index", {
+			'title': ' 博客首页',
+			'blogs': blogs,
+			'req': req,
+			'method': {
+				sliceContent: helper.sliceContent,
+				outputDate: helper.outputDate,
+				activeNav: helper.activeNav
+			}
+		})
+	}
+
+	mongo.showBlogList(res, renderBlogList);
 })
 //index
 app.get('/blog', function (req, res) {
@@ -111,7 +124,7 @@ app.get("/register", function (req, res) {
 })
 //project
 app.get("/project", function (req, res) {
-	res.render('project', {
+	res.render('blog/project', {
 		'req': req,
 		'blogs': [],
 		method: {
@@ -121,7 +134,7 @@ app.get("/project", function (req, res) {
 })
 //about
 app.get("/about", function (req, res) {
-	res.render('about', {
+	res.render('blog/about', {
 		'req': req,
 		'blogs': [],
 		method: {

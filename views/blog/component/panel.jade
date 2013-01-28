@@ -14,7 +14,7 @@ div.secondary-nav(data-spy="affix", data-offset-top="260")
   li(class = (nav.primary === 'project') ? 'active' : ''): a(href="/project") 项目
   li(class = (nav.primary === 'about') ? 'active' : ''): a(href="/about") 关于这
   li.divider
-  li(href="#") 订阅
+  li: a(href="/feed/feed.xml") 订阅
 
 div.category(class = (!req.params.title && req.route.path.indexOf('blog') > -1) ? 'show' : 'hide')
    p 文章分类
