@@ -17,7 +17,7 @@ var activeNav = function (data) {
 	var primary, category;
 	if (data.indexOf('about') > -1) primary = "about"
 	else if (data.indexOf('project') > -1) primary = "project"
-	else if (data.indexOf('blog') > -1) primary = "blog"
+	else if (data.indexOf('blog') > -1 || data === "/") primary = "blog"
 
 	if (data.indexOf('nodejs') > -1) category = "node"
 	else if (data.indexOf('front') > -1) category = "front"

@@ -67,7 +67,7 @@ mongo.connectToDB(mongo.initBlog);
 app.get('/', function (req, res) {
 	var renderBlogList = function (res, blogs) {
 		res.render("blog/index", {
-			'title': ' 博客首页',
+			'title': ' 轻薄',
 			'blogs': blogs,
 			'req': req,
 			'method': {
@@ -84,7 +84,7 @@ app.get('/', function (req, res) {
 app.get('/blog', function (req, res) {
 	var renderBlogList = function (res, blogs) {
 		res.render("blog/index", {
-			'title': ' 博客首页',
+			'title': ' 轻薄',
 			'blogs': blogs,
 			'req': req,
 			'method': {
