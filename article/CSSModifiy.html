@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>谈CSS命名规则</title>
+	<title>如何组织Html元素与如何进行CSS命名</title>
 	<link rel="stylesheet" type="text/css" href="css/bootstrap.css">
 	<link rel="stylesheet" type="text/css" href="prettify/sunburst.css">
 	<script type="text/javascript" src="prettify/prettify.js"></script>	
@@ -24,12 +24,65 @@
 		<div class="row">
 			<div class="span1"></div>
 			<div class="span6">
-
-			<p>如何组织CSS命名？随性的命名在编程的时候虽然很爽，但是维护起来却相当麻烦。后来尝试开始有规律的命名，但还是收效甚微。于是决心找了些资料把这个问题解决了。在这里整理一下。</p>
+			<!---->
+			<p>最近下决心整理一份对页面元素的组织规则和CSS的命名规则，因为深深感受到如果页面上元素太多，没有规则的命名和组织会让网页的维护性大打折扣。参考了几篇文章并且发散了一下，在这里和大家分享</p>
 			<p><strong><a href="http://bem.info/method/definitions/" target="_blank">BEM</a></strong></p>
-			<p>给CSS命名的过程相当于对页面不同元素进行组成的过程，命名规则大致会映射元素之间的关系，比如包含和嵌套。BEM想谈的就是这样一件事，如何划分页面上的元素，并且在css命名中加以体现。</p>
-			<p>BEM分表代指Block, Element, Modifier。但不仅仅停留在对单词的理解这么简单。</p>
+			<p>如何组织页面上的元素，或者说安排元素之间的关系势必会对css命名产生影响；css命名也是对元素关系的映射。BEM这个方法把元素分为三类，代指 <code>Block</code> , <code>Element</code> , <code>Modifier</code> 。</p>
+			<p>举个例子，通常我们会把页面分为header, body, footer部分，可能header部分里面又包括了logo, search, login模块。我们可以把Block理解为一个已经封装好了的组件，比如一个搜索模块（这里说的模块统统指一系列html元素，而非逻辑上的功能代码），它是相对于同级元素比较独立的（也相对于element元素）。Element则是block中实现具体功能的部件，比如在搜索模块中最起码需要一个按钮(button)，一个输入框(input)，它和block的重要区别之一是，它没有block那么独立，一旦离开了上下文环境（比如它所在的block），它失去功能上的意义了。这就非常灵活了，因为某一个block可以是它父元素或者其他元素的element，比如我们单独看搜索模块可能是一个独立的block，但是搜索模块通常又是放在页面的header中，那么搜索模块此时又成了header的element，而header又是一个更大的block。</p>
+			<p>接下来，BEM作者给出了CSS的具体命名规则希望是</p>
+			<ul>
+				<li>一个block必须有唯一的名字(class)，比如</li>
+			</ul>
+			<pre class="prettyprint lang-html">
+&lt;ul class="menu"&gt;
+  …
+&lt;/ul&gt;	</pre>
+			<ul>
+				<li>而element的命名需要包括它所属的block的名字，并且以分隔符分隔开:</li>
+			</ul>
+			<pre class="prettyprint lang-html">
+&lt;ul class="menu"&gt;
+  &lt;li class="menu__item">…&lt;/li&gt;
+  &lt;li class="menu__item">…&lt;/li&gt;
+&lt;/ul&gt;	</pre>
+			<p>当然modifier就更好理解了，比如在一个tab模块中，我们需要突出某个tab，就需要给它添加一个的modifier作用的class，这里的modifier可以使特殊的状态，也可以是特殊的属性。就拿上面那个menu例子来说，我们想增大字体，想标识当前选中的菜单项，就可以添加</p>
+			<pre class="prettyprint lang-html">
+&lt;ul class="menu menu_size_big"&gt;
+  &lt;li class="menu__item"&gt;Index&lt;/li&gt;
+  &lt;li class="menu__item menu__item_state_current"&gt;Product&lt;/li&gt;
+  &lt;li class="menu__item"&gt;Contact&lt;/li&gt;
+&lt;/ul&gt;</pre>
+			<p>巧合的是，在写这篇文章的同时Smashing Magazine上同时发布了一篇谈BEM现在与将来的文章<a href="http://coding.smashingmagazine.com/2013/02/21/the-history-of-the-bem-methodology/" target="_blank">The Evolution Of The BEM Methodology</a>。主要对BEM过去的里程碑，每个里程碑所得出的一些方法论做了一些总结。比如说谈到BEM的起源其实是为了解决实际项目中css选择器冗长的问题，比如</p>
+<pre class="prettyprint lang-css">
+.result .albums .album .buy
+{
+ 	float: left;
+ 	padding: 0.4em 1em 0 1.6em;
+}
 
+.result .albums .info i
+{
+ 	font-size: 85%;
+}
+</pre>			
+			<p>有甚者</p>
+<pre class="prettyprint lang-css">
+.b-foot div div div div div
+{
+ background-position: 71%;
+ background-image: url(../i/foot-5.png);
+}
+
+.b-foot div div div div div div
+{
+ background-position: 87%;
+ background-image: url(../i/foot-6.png);
+}
+</pre>	
+			<p>虽然现在看起来很可笑，但我觉得这却是实际中遇见的问题，必须承认我自己有时也陷入这样的怪圈</p>
+			<p>这篇文章谈为什么有BEM的来龙去脉更生动一些。有兴趣的同学可以看看。其实BEM是一系列的方法论，甚至还包括文件的命名的文件夹分类规则，XSL templates，甚至整个可供参考的框架。</p>
+			<p>因为在这里我只是作为一个组织html元素和css命名的其中一个方法，只做了简明的介绍和总结。</p>
+	
 			</div>
 			<div class="span4"></div>
 			<div class="span1"></div>
