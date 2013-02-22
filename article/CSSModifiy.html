@@ -16,7 +16,7 @@
 		<div class="row">
 			<div class="span1"></div>
 			<div class="span6">
-				<h3>谈页面css</h3>
+				<h3>如何组织Html元素与如何进行CSS命名</h3>
 			</div>
 			<div class="span4"></div>
 			<div class="span1"></div>
@@ -26,7 +26,9 @@
 			<div class="span6">
 			<!---->
 			<p>最近下决心整理一份对页面元素的组织规则和CSS的命名规则，因为深深感受到如果页面上元素太多，没有规则的命名和组织会让网页的维护性大打折扣。参考了几篇文章并且发散了一下，在这里和大家分享</p>
-			<p><strong><a href="http://bem.info/method/definitions/" target="_blank">BEM</a></strong></p>
+			<br>
+			<h4><a href="http://bem.info/method/definitions/">BEM(Block Element Modifier)</a></h4>
+			<br>
 			<p>如何组织页面上的元素，或者说安排元素之间的关系势必会对css命名产生影响；css命名也是对元素关系的映射。BEM这个方法把元素分为三类，代指 <code>Block</code> , <code>Element</code> , <code>Modifier</code> 。</p>
 			<p>举个例子，通常我们会把页面分为header, body, footer部分，可能header部分里面又包括了logo, search, login模块。我们可以把Block理解为一个已经封装好了的组件，比如一个搜索模块（这里说的模块统统指一系列html元素，而非逻辑上的功能代码），它是相对于同级元素比较独立的（也相对于element元素）。Element则是block中实现具体功能的部件，比如在搜索模块中最起码需要一个按钮(button)，一个输入框(input)，它和block的重要区别之一是，它没有block那么独立，一旦离开了上下文环境（比如它所在的block），它失去功能上的意义了。这就非常灵活了，因为某一个block可以是它父元素或者其他元素的element，比如我们单独看搜索模块可能是一个独立的block，但是搜索模块通常又是放在页面的header中，那么搜索模块此时又成了header的element，而header又是一个更大的block。</p>
 			<p>接下来，BEM作者给出了CSS的具体命名规则希望是</p>
@@ -82,7 +84,78 @@
 			<p>虽然现在看起来很可笑，但我觉得这却是实际中遇见的问题，必须承认我自己有时也陷入这样的怪圈</p>
 			<p>这篇文章谈为什么有BEM的来龙去脉更生动一些。有兴趣的同学可以看看。其实BEM是一系列的方法论，甚至还包括文件的命名的文件夹分类规则，XSL templates，甚至整个可供参考的框架。</p>
 			<p>因为在这里我只是作为一个组织html元素和css命名的其中一个方法，只做了简明的介绍和总结。</p>
-	
+			<br>
+			<h4><a target="_blank" href="http://smacss.com/book/categorizing">SMACSS(Scalable and Modular Architecture for CSS)</a></h4>
+			<br>
+			<p>这个方法论将css分为5类，分别是</p>
+			<ul><li><strong>Base</strong></li></ul>
+			<ul><li><strong>Layout</strong></li></ul>
+			<ul><li><strong>Module</strong></li></ul>
+			<ul><li><strong>State</strong></li></ul>
+			<ul><li><strong>Theme(忽略这个先)</strong></li></ul>
+			<p>下面一一进行介绍</p>
+			<h5>Base:</h5>
+			<p>基本(base)规则即那些只使用元素选择器，后代选择等（从不涉及class或者id）的规则，比如</p>
+<pre class="prettyprint lang-css">
+body, form {
+    margin: 0;
+    padding: 0;
+}
+
+a:hover {
+    color: #03F;    
+}</pre>				
+			<p>你可以理解为定义一些全局的css样式。通常这种工作也可以交给reset.css或者<a href="https://github.com/necolas/normalize.css/">normalize.css</a>来完成</p>
+			<br>
+			<h5>Layout Rules:</h5>
+			<p> 这里的布局(Layout)指页面上比较大块的区域，比如header，body， footer。而这里的layout rule也分为两类一类是通过id定义的，比如</p>
+<pre class="prettyprint lang-css">
+#header, #article, #footer {
+    width: 960px;
+    margin: auto;
+}
+
+#article {
+    border: solid #CCC;
+    border-width: 1px 0 0;
+}</pre>			
+			<p>还有一类可能是在你用了一些css框架的情况下，比如<a href="http://960.gs/">960.gs</a>，框架里的样式算是另一类layout rule</p>
+			<p>作者建议与layout有关的css规则以<code>l-</code>开头，比如</p>
+<pre class="prettyprint lang-css">
+.l-fixed #sidebar {
+    width: 200px;
+}</pre>				
+			<br>
+			<h5>Module Rules:</h5>
+			<p>比如说一些登陆，搜索，文章，这样的元素组合我们就可以称之为module。对于这样一些元素的css命名，作者说就免了前缀，直接用模块名称好了，比如</p>
+<pre class="prettyprint lang-css">
+.login {
+    width: 200px;
+}</pre>				
+			<p>作者在这里强调的是，<strong>避免使用元素选择器</strong>。比如开始我们有这么一段html， 有这么一段样式</p>
+<pre class="prettyprint lang-html">
+&lt;div class="fld"&gt;
+    &lt;span&gt;Folder Name&lt;/span&gt;
+&lt;/div&gt;
+</pre>			
+<pre class="prettyprint lang-css">
+/* The Folder Module */
+.fld > span {
+    padding-left: 20px;
+    background: url(icon.png);
+}</pre>					
+		<p>问题是当我们的项目变得庞大，需要增加一个span标签时</p>
+<pre class="prettyprint lang-html">
+&lt;div class="fld"&gt;
+    &lt;span&gt;Folder Name&lt;/span&gt;
+    &lt;span&gt;(32 items)&lt;/span&gt;
+&lt;/div&gt;
+</pre>			
+
+			
+
+
+
 			</div>
 			<div class="span4"></div>
 			<div class="span1"></div>
