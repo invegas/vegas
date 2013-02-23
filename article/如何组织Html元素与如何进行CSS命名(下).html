@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>如何组织Html元素与如何进行CSS命名（下）</title>
+	<link rel="stylesheet" type="text/css" href="css/bootstrap.css">
+	<link rel="stylesheet" type="text/css" href="prettify/sunburst.css">
+	<script type="text/javascript" src="prettify/prettify.js"></script>	
+	<style type="text/css">
+		body {
+			font-family: '微软雅黑';
+		}
+		blockquote p{
+			font-style: italic;
+			font-size: 12px;
+		}
+	</style>
+</head>
+<body onload="prettyPrint()">
+	<div class="container">
+		<div class="row">
+			<div class="span1"></div>
+			<div class="span6">
+				<h3>如何组织Html元素与如何进行CSS命名（下）</h3>
+			</div>
+			<div class="span4"></div>
+			<div class="span1"></div>
+		</div>		
+		<div class="row">
+			<div class="span1"></div>
+			<div class="span6">
+			<!---->
+
+
+			<p><a href="http://nicolasgallagher.com" target="_blank">Nicolas Gallagher</a>可以说是一位大神级的人物。这篇文章<a href="http://nicolasgallagher.com/about-html-semantics-front-end-architecture/">About HTML semantics and front-end architecture</a>是他它对css组织和命名的一些看法，也相当值得我们一读。</p>
+			<p>这篇文章主要是谈html的语义(semantics)化。比如他反对class的命名以内容为驱动(ontent-derived)，比如这样</p>
+<pre class="prettyprint lang-html">
+&lt;div class="news"&gt;
+    &lt;h2>News&lt;/h2&gt;
+    [news content]
+&lt;/div&gt;</pre>
+			<p>因为容器的内容是news所以class就要是news？他认为class具有以下几个特征</p>
+			<ul>
+				<li><strong>其实以内容为驱动的语义化在html标签上已经体现出来了，</strong>比如说标题使用h标签，文章使用p标签</li>
+				<li><strong>class名主要的用处是为css和javascript服务</strong>，如果你既不需要添加样式又不需要再js中引用，那要id和class有什么用</li>
+				<li><strong>class名取的再怎么恰当，有意义，对机器来说是没有任何意义的</strong></li>
+				<li><strong>class名应该在开发者之间传递有用的信息</strong></li>
+			</ul>
+			<p>另一种取class名的作法是，从网页的架构和功能上来区分。<strong>最具复用性的组件的名字往往是脱离内容的。</strong></p>
+			<p>前端架构中，模板(template)，组件(component)，面向对象(object-oriented)的意义就在于，开发有限的可复用的模块来容纳不同的内容。所以以编程为驱动（而不是以内容为驱动）的class名称主要的目的也应该是，提供有意义的，灵活的，可复用的表现层/行为层的hooks（怎么翻译？）给开发者使用</p>
+			<p>一个灵活的，具有复用性的组件既不能对特定的dom树结构有依赖，也不能指定特定的元素类型来承载。它应该被所有容器所接纳，并且可以被任意的主题化。</p>
+			<p>应该避免使用css的类型选择器，比如下面这个例子</p>
+<pre class="prettyprint lang-html">
+&lt;nav class="uilist"&gt;
+    &lt;a href="#"&gt;Home&lt;/a&gt;
+    &lt;a href="#"&gt;About&lt;/a&gt;
+    &lt;a class="btn" href="#"&gt;Login&lt;/a&gt;
+&lt;/nav&gt;
+</pre>			
+<pre class="prettyprint lang-css">
+.btn { /* styles */ }
+.uilist { /* styles */ }
+.uilist a { /* styles */ }	
+</pre>
+			<p>首先因为css优先级的规则关系，.btn会被.uilist a的样式覆盖；其次，uilist这个组件始终需要一个a标签嵌套在其中。</p>
+			<p>所以最好的作法应该是指定特定的class名称</p>
+<pre class="prettyprint lang-html">
+&lt;nav class="uilist"&gt;
+    &lt;a class="uilist-item" href="#"&gt;Home&lt;/a&gt;
+    &lt;a class="uilist-item" href="#"&gt;About&lt;/a&gt;
+    &lt;span class="uilist-item"&gt;
+        <&lt;a class="btn" href="#"&gt;Login&lt;/a&gt;
+    &lt;/span&gt;
+</nav>
+</pre>			
+<pre class="prettyprint lang-css">
+.btn { /* styles */ }
+.uilist { /* styles */ }
+.uilist-item { /* styles */ }
+</pre>			
+			<h5>Component modifiers</h5>
+			<P>没错，这里的modifier和bem中的modifier是一致的概念。</P>
+			<p>通常组件也会有一些变种，比如一个按钮我们需要不同的背景色和边框。主要有两种模式来创建这样的组件</p>
+			<ul><li><strong>single-class</strong></li></ul>
+<pre class="prettyprint lang-html">
+&lt;button class="btn"&gt;Default&lt;/button&gt;
+&lt;button class="btn-primary"&gt;Login&lt;/button&gt;
+</pre>		
+<pre class="prettyprint lang-css">
+.btn, .btn-primary { /* button template styles */ }
+.btn-primary { /* styles specific to save button */ }
+</pre>			
+			<ul><li><strong>multi-class</strong></li></ul>
+<pre class="prettyprint lang-html">
+&lt;button class="btn"&gt;Default&lt;/button&gt;
+&lt;button class="btn btn-primary"&gt;Login&lt;/button&gt;
+</pre>		
+<pre class="prettyprint lang-css">
+.btn { /* button template styles */ }
+.btn-primary { /* styles specific to primary button */ }
+</pre>	
+			<p>作者推荐的是第二种。考虑一种情况，比如当我需要统一调整btn组件时，第一种方法需要这么修改</p>
+<pre class="prettyprint lang-css">
+/* "single-class" adjustment */
+.thing .btn,
+.thing .btn-primary,
+.thing .btn-danger,
+.thing .btn-etc { /* adjustments */ }
+</pre>
+			<p>而第二种方法只需要这么修改</p>
+<pre class="prettyprint lang-css">
+/* "multi-class" adjustment */
+.thing .btn { /* adjustments */ }
+</pre>
+			<hr>
+			<p>接下来我们实战，看看淘宝和人人的规则</p>
+			<h5>淘宝</h5>
+			<p>准确来说我选择的是<a href="http://aliceui.com/" target="_blank">支付宝前端样式解决方案。</a></p>
+			<p>有两个文档具有参考价值，一个是<a target="_blank" href="http://aliceui.com/alice-css-guide/">《样式库构建规范》</a>，这个是我们主要关注的，它谈的主要是组件，命名还有构成；另一个文档是<a target="_blank" href="http://aliceui.com/css-spec/">《CSS 规范》</a>，则谈的是细节和书写规则，暂时忽略。</p>
+
+			</div>
+			<div class="span4"></div>
+			<div class="span1"></div>
+		</div>
+	</div>
+	<script type="text/javascript" src="js/bootstrap.js"></script>
+</body>
+</html>
