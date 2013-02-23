@@ -1,13 +1,17 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>如何组织Html元素与如何进行CSS命名</title>
+	<title>如何组织Html元素与如何进行CSS命名（上）</title>
 	<link rel="stylesheet" type="text/css" href="css/bootstrap.css">
 	<link rel="stylesheet" type="text/css" href="prettify/sunburst.css">
 	<script type="text/javascript" src="prettify/prettify.js"></script>	
 	<style type="text/css">
 		body {
 			font-family: '微软雅黑';
+		}
+		blockquote p{
+			font-style: italic;
+			font-size: 12px;
 		}
 	</style>
 </head>
@@ -144,17 +148,118 @@ a:hover {
     padding-left: 20px;
     background: url(icon.png);
 }</pre>					
-		<p>问题是当我们的项目变得庞大，需要增加一个span标签时</p>
+		<p>问题是当我们的项目变得庞大，需要增加一个或者更多span标签时</p>
 <pre class="prettyprint lang-html">
 &lt;div class="fld"&gt;
     &lt;span&gt;Folder Name&lt;/span&gt;
     &lt;span&gt;(32 items)&lt;/span&gt;
 &lt;/div&gt;
 </pre>			
+		<p>这会就傻×了吧。所以最好是给标签添加上有语义的class名称，比如</p>
+<pre class="prettyprint lang-html">
+&lt;div class="fld"&gt;
+    &lt;span class="fld-name"&gt;Folder Name&lt;/span&gt;
+    &lt;span class="fld-items"&gt;(32 items)&lt;/span&gt;
+&lt;/div&gt;
+</pre>			
+		<p>还有一种情况，当我们在不同的section中使用了同一个module时，我们可能需要根据module所在的section来重新定义样式，比如</p>
+<pre class="prettyprint lang-css">
+.pod { 
+    width: 100%; 
+}
+.pod input[type=text] { 
+    width: 50%; 
+}
+#sidebar .pod input[type=text] { 
+    width: 100%; 
+}</pre>		
+		<p>但这样还是会产生问题，会让css变得没有规则和难以维护，所以作者建议添加一个子模块css(Subclassing Modules)，比如这么做</p>
+<pre class="prettyprint lang-html">
+&lt;div class="pod pod-constrained"&gt;...&lt;/div&gt;
+&lt;div class="pod pod-callout"&gt;...&lt;/div&gt;
+</pre>			
+<pre class="prettyprint lang-css">
+.pod { 
+    width: 100%; 
+} 
+.pod input[type=text] { 
+    width: 50%; 
+}
+.pod-constrained input[type=text] { 
+    width: 100%; 
+}
+.pod-callout { 
+    width: 200px; 
+}
+.pod-callout input[type=text] { 
+    width: 180px; 
+}}</pre>					
+		<br>
+		<h5>State Rules</h5>
+		<p>state 与之前的modifier概念类似，这种类型的class只起一些修饰作用。并且作者建议使用<code>is-</code>开头，比如</p>
+<pre class="prettyprint lang-html">
+&lt;div id="header" class="is-collapsed"&gt;
+    &lt;form&gt;
+        &lt;div class="msg is-error"&gt;
+            There is an error!
+        &lt;/div&gt;
+        &lt;label for="searchbox" class="is-hidden"&gt;Search&lt;/label&gt;
+        &lt;input type="search" id="searchbox"&gt;
+    &lt;/form&gt;
+&lt;/div&gt;</pre>		
+		<p>要注意它和之前sub-module的区别</p>	
+		<ul>
+			<li>state规则给layout或者module用都行</li>
+			<li>state规则通常由javascript有关（比如错误，高亮，是否折叠），而sub-module是静态不能随意修改的。只是为了区分模块之间的区别</li>
+		</ul>
+		<p>在这个方法论的文章中，我觉得最有价值的一篇是谈到css的可访问性的。首先作者给出的两条建议是</p>
+		<ul>
+			<li>css不应该依赖DOM树的结构</li>
+			<li>css选择器不宜太深</li>
+		</ul>
+		<p>假如我们有这么一段css</p>
+<pre class="prettyprint lang-css">
+#sidebar div {
+    border: 1px solid #333;
+}
 
-			
+#sidebar div h3 { 
+    margin-top: 5px;
+}
 
+#sidebar div ul {
+    margin-bottom: 5px; 
+}</pre>
+		<p>这段css中的div可以看做一个组件，是由h3和ul组成的。如果我们想把这个组件又放在footer中怎么办，看下面这段代码怎么样</p>
+<pre class="prettyprint lang-css">
+#sidebar div, #footer div {
+    border: 1px solid #333;
+}
 
+#sidebar div h3, #footer div h3 { 
+    margin-top: 5px;
+}
+
+#sidebar div ul, #footer div ul {
+    margin-bottom: 5px; 
+} </pre>	
+		<p>代码这么冗余的原因就是因为它与dom联系的太紧密，不如把这层依赖关系去掉，给它加上一个独立的class</p>
+<pre class="prettyprint lang-css">
+.pod {
+    border: 1px solid #333;
+}
+
+.pod > h3 { 
+    margin-top: 5px;
+}
+
+.pod > ul {
+    margin-bottom: 5px; 
+} </pre>		
+		<blockquote>
+			<p>我们试图在可维护性，性能，和可读性三者之间保持平衡，虽然css选择器具有一定深度意味着更少的class，但是它增加了可维护性和可读性。除非你压根就不想使用class。</p>
+		</blockquote>	
+		<p>下一期最后看看高手Nicolas的方法论。并且结合淘宝和人人的css规则看看实际的一些应用情况。</p>
 
 			</div>
 			<div class="span4"></div>
