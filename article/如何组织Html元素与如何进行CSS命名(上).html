@@ -34,7 +34,9 @@
 			<h4><a href="http://bem.info/method/definitions/">BEM(Block Element Modifier)</a></h4>
 			<br>
 			<p>如何组织页面上的元素，或者说安排元素之间的关系势必会对css命名产生影响；css命名也是对元素关系的映射。BEM这个方法把元素分为三类，代指 <code>Block</code> , <code>Element</code> , <code>Modifier</code> 。</p>
-			<p>举个例子，通常我们会把页面分为header, body, footer部分，可能header部分里面又包括了logo, search, login模块。我们可以把Block理解为一个已经封装好了的组件，比如一个搜索模块（这里说的模块统统指一系列html元素，而非逻辑上的功能代码），它是相对于同级元素比较独立的（也相对于element元素）。Element则是block中实现具体功能的部件，比如在搜索模块中最起码需要一个按钮(button)，一个输入框(input)，它和block的重要区别之一是，它没有block那么独立，一旦离开了上下文环境（比如它所在的block），它失去功能上的意义了。这就非常灵活了，因为某一个block可以是它父元素或者其他元素的element，比如我们单独看搜索模块可能是一个独立的block，但是搜索模块通常又是放在页面的header中，那么搜索模块此时又成了header的element，而header又是一个更大的block。</p>
+			<p>举个例子，通常我们会把页面分为header, body, footer部分，可能header部分里面又包括了logo, search, login模块。我们可以把Block理解为一个已经封装好了的组件，比如一个搜索模块（这里说的模块统统指一系列html元素，而非逻辑上的功能代码），它是相对于同级元素比较独立的（也相对于element元素）。</p>
+			<p>Element则是block中实现具体功能的部件，比如在搜索模块中最起码需要一个按钮(button)，一个输入框(input)，它和block的重要区别之一是，它没有block那么独立，一旦离开了上下文环境（比如它所在的block），它失去功能上的意义了。</p>
+			<p>这就非常灵活了，因为某一个block可以是它父元素或者其他元素的element，比如我们单独看搜索模块可能是一个独立的block，但是搜索模块通常又是放在页面的header中，那么搜索模块此时又成了header的element，而header又是一个更大的block。</p>
 			<p>接下来，BEM作者给出了CSS的具体命名规则希望是</p>
 			<ul>
 				<li>一个block必须有唯一的名字(class)，比如</li>
@@ -112,7 +114,7 @@ a:hover {
 			<p>你可以理解为定义一些全局的css样式。通常这种工作也可以交给reset.css或者<a href="https://github.com/necolas/normalize.css/">normalize.css</a>来完成</p>
 			<br>
 			<h5>Layout Rules:</h5>
-			<p> 这里的布局(Layout)指页面上比较大块的区域，比如header，body， footer。而这里的layout rule也分为两类一类是通过id定义的，比如</p>
+			<p> 这里的布局(Layout)指页面上比较大块的区域，比如header，body， footer。而这里的layout rule也分为两类，一类是通过id定义的，比如</p>
 <pre class="prettyprint lang-css">
 #header, #article, #footer {
     width: 960px;
@@ -123,7 +125,12 @@ a:hover {
     border: solid #CCC;
     border-width: 1px 0 0;
 }</pre>			
-			<p>还有一类可能是在你用了一些css框架的情况下，比如<a href="http://960.gs/">960.gs</a>，框架里的样式算是另一类layout rule</p>
+			<p>还有一类可能是在你用了一些css框架的情况下，比如<a href="http://960.gs/">960.gs</a></p>
+<pre class="prettyprint lang-css">
+.container_12 .grid_6,
+.container_16 .grid_8 {
+  width: 460px;
+}</pre>						
 			<p>作者建议与layout有关的css规则以<code>l-</code>开头，比如</p>
 <pre class="prettyprint lang-css">
 .l-fixed #sidebar {

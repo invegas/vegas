@@ -32,7 +32,7 @@
 
 
 			<p><a href="http://nicolasgallagher.com" target="_blank">Nicolas Gallagher</a>可以说是一位大神级的人物。这篇文章<a href="http://nicolasgallagher.com/about-html-semantics-front-end-architecture/">About HTML semantics and front-end architecture</a>是他它对css组织和命名的一些看法，也相当值得我们一读。</p>
-			<p>这篇文章主要是谈html的语义(semantics)化。比如他反对class的命名以内容为驱动(ontent-derived)，比如这样</p>
+			<p>这篇文章主要是谈html的语义(semantics)化。比如他反对class的命名以内容为驱动(content-derived)，比如这样</p>
 <pre class="prettyprint lang-html">
 &lt;div class="news"&gt;
     &lt;h2>News&lt;/h2&gt;
@@ -112,10 +112,13 @@
 .thing .btn { /* adjustments */ }
 </pre>
 			<hr>
-			<p>接下来我们实战，看看淘宝和人人的规则</p>
-			<h5>淘宝</h5>
-			<p>准确来说我选择的是<a href="http://aliceui.com/" target="_blank">支付宝前端样式解决方案。</a></p>
-			<p>有两个文档具有参考价值，一个是<a target="_blank" href="http://aliceui.com/alice-css-guide/">《样式库构建规范》</a>，这个是我们主要关注的，它谈的主要是组件，命名还有构成；另一个文档是<a target="_blank" href="http://aliceui.com/css-spec/">《CSS 规范》</a>，则谈的是细节和书写规则，暂时忽略。</p>
+			<p>之前的想法是想法是想把人人和淘宝的规则再分别整理一遍，后来发现，既然已经成规则，他们的文档已经很抽象很精辟，没有办法再再整理了，如果真的要整理的话只能直接复制粘贴了。所以还是都不在这里一一展示了。</p>
+			<p><a href="http://aliceui.com/" target="_blank">支付宝前端样式解决方案:</a></p>
+			<p><a target="_blank" href="http://aliceui.com/alice-css-guide/">《样式库构建规范》</a>
+			<p><a target="_blank" href="http://aliceui.com/css-spec/">《CSS 规范》</a></p>
+			<p><a target="_blank" href="http://fed.renren.com/archives/1212">人人FED CSS编码规范</a></p>
+			<p>它们的命名规则和之前的几篇文章是一致的，比如对每一个组件都单独命名，绝不使用元素或者类型选择器。除了本系列文章谈的一些原则可以得到映射。我们能从这些规范里学习到的更多是细节……太多太多细节了！按照这些细节来书写css，保证团队里每个人书写的css绝对都是一样的，也绝对都能互相看懂，可维护性太棒了！</p>
+
 
 			</div>
 			<div class="span4"></div>
