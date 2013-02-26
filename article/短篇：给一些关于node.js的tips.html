@@ -21,8 +21,44 @@
 			<div class="span6">
 			<!---->
 
-			<p>分享一些我在写node.js的一些心得，与编程无关，而是关于组织结构，环境变量等。仅供参考</p>
+			<p>分享一些我在写node.js的一些心得与资源，与编程无关，而是关于组织结构，环境变量等。自认为也在初级阶段，所以仅供参考</p>
 			<br>
+
+			<h4>process.env</h4>
+			<p>再开发中遇到的另一个问题是，需要在开发环境和生产环境中切换。比如在开发时肯用的数据库名称，端口号和密码是一个，而生产环境中时另外一个。最好的办法是准备两套配置文件，根据环境的不同进行整体的切换，而不是手动的去修改</p>
+			<p>在stackoverflow有一个非常好的<a href="http://stackoverflow.com/questions/8332333/node-js-setting-up-environment-specific-configs-to-be-used-with-everyauth">解决方案</a>。利用了<code>process</code>这个全局变量。这个变量就类似于javascript中的global对象，在任意位置都可以访问。你可能见过类似的代码:</p>
+<pre class="prettyprint lang-javascript">
+app.listen(process.env.NOD_ENV || 8000)
+</pre>			
+			<p>大意就是说先看看全局变量中有没有需要运行的代码，如果没有的话则运行在8000端口上。</p>
+			<p> 同理我们可以先设置好几套config，再根据全局变量中的环境参数调用不用的config。直接贴上问题中的代码吧</p>
+<pre class="prettyprint lang-javascript">
+/* 首先以在运行程序时就给环境变量赋值 */
+NODE_ENV=production node app.js
+</pre>			
+<p>准备好一个config.js专门用来配置之间的切换</p>
+<pre class="prettyprint lang-javascript">
+module.exports = function(){
+    switch(process.env.NODE_ENV){
+        case 'development':
+            return {dev setting};
+        case 'production':
+            return {prod settings};
+        default:
+            return {error or other settings};
+    }
+};
+</pre>			
+			<br>
+			<h4>Package.json</h4>
+			<p>在上面的目录结构中最后还剩一个package.json文件，开始玩node.js的时候最不重视的就是这个文件，但现在我觉得非常重要。它最实际的功能是，把你这个程序所依赖的库和他们的版本信息放入其中，其他人如果想在他的电脑上运行你的程序的话，进入根目录后，只需要运行<code>npm install</code>, 就能一次性的安装这些依赖库。</p>
+			<p>但我觉得它更像一个node程序的文档，除了有依赖库之外，还可以添加有关这个程序的其他基本信息，比如书版本，贡献者，指定启动文件，所遵循的开源协议。更重要的是这个文档是非常标准的。</p>
+<pre class="prettyprint lang-javascript">
+//在terminal中运行即可查看有关package.json文件的说明
+npm help json</pre>						
+			<p>或者在<a href="http://package.json.nodejitsu.com/">这里</a>，这是一个更生动的教学，每当你点击一个字段给会具体的解释。</p>
+			<br>
+
 			<h4>目录结构</h4>
 			<p>为什么要在乎目录结构？为了可维护性，当下一个人维护你的程序的时候不至于满世界找文件和猜这个文件是干嘛的。</p>
 			<p>相信相当多的人使用<code>express</code>框架来搭建自己的node.js应用，但我不确定有多少人知道express自动创建程序目录结构的功能（至少我在早期接触node.js时，书中没有提到，并且只顾一个劲的编程）。</p>
@@ -52,13 +88,6 @@
 				<li>如果你有一些control类，比如数据库有关的mongo.js，或者验证有关的auth.js，既可以放在根目录，也可以新建一个controller文件夹放入其中。</li>
 			</ul>
 			<br>
-			<h4>Package.json</h4>
-			<p>在上面的目录结构中最后还剩一个package.json文件，开始玩node.js的时候最不重视的就是这个文件，但现在我觉得非常重要。它最实际的功能是，把你这个程序所依赖的库和他们的版本信息放入其中，其他人如果想在他的电脑上运行你的程序的话，进入根目录后，只需要运行<code>npm install</code>, 就能一次性的安装这些依赖库。</p>
-			<p>但我觉得它更像一个node程序的文档，除了有依赖库之外……</p>
-			<br>
-			<h4>process.env</h4>
-			<p>再开发中遇到的另一个问题是，需要在开发环境和生产环境中切换。在开发时肯用的数据库名称，端口号和密码是一个，而生产环境中时另外一个。</p>
-
 
 
 
