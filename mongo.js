@@ -102,19 +102,37 @@ var initBlog = function () {
 }
 
 var showBlogList = function (res, callback) {
-	Blog.find({}, function (err, doc) {
+	// Blog.find({}, function (err, doc) {
+	// 	if (!err) {
+	// 		callback(res, doc);
+	// 	}
+	// })	
+
+	Blog.find({}).sort({ 
+		date: -1 
+	}).exec(function (err, doc) {
 		if (!err) {
 			callback(res, doc);
 		}
-	})	
+	})
 }
 var showBlogListByCate = function (req, res, callback) {
 	var key = req.params.key;
-	Blog.find({"category": key}, function (err, doc) {
+	// Blog.find({"category": key}, function (err, doc) {
+	// 	if (!err) {
+	// 		callback(res, doc);
+	// 	}
+	// })	
+
+	Blog.find({
+		"category": key
+	}).sort({ 
+		date: -1 
+	}).exec(function (err, doc) {
 		if (!err) {
 			callback(res, doc);
 		}
-	})	
+	})
 }
 
 var saveBlog = function (res, data, callback) {
