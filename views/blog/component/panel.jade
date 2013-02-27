@@ -10,7 +10,7 @@ div.link
 - var nav = method.activeNav(req.originalUrl);
 div.secondary-nav(data-spy="affix", data-offset-top="260")
  ul.nav.nav-list
-  li(class = (nav.primary === 'blog') ? 'active' : ''): a(href="/") 博客
+  li(class = (nav.primary === 'blog') ? 'active' : ''): a(href="/blog") 博客
   li(class = (nav.primary === 'project') ? 'active' : ''): a(href="/project") 项目
   li(class = (nav.primary === 'about') ? 'active' : ''): a(href="/about") 关于这
   li.divider
