@@ -28,9 +28,9 @@
 			<p>再开发中遇到的另一个问题是，需要在开发环境和生产环境中切换。比如在开发时肯用的数据库名称，端口号和密码是一个，而生产环境中时另外一个。最好的办法是准备两套配置文件，根据环境的不同进行整体的切换，而不是手动的去修改</p>
 			<p>在stackoverflow有一个非常好的<a href="http://stackoverflow.com/questions/8332333/node-js-setting-up-environment-specific-configs-to-be-used-with-everyauth">解决方案</a>。利用了<code>process</code>这个全局变量。这个变量就类似于javascript中的global对象，在任意位置都可以访问。你可能见过类似的代码:</p>
 <pre class="prettyprint lang-javascript">
-app.listen(process.env.NOD_ENV || 8000)
+app.listen(process.PORT || 8000)
 </pre>			
-			<p>大意就是说先看看全局变量中有没有需要运行的代码，如果没有的话则运行在8000端口上。</p>
+			<p>大意就是说先看看全局变量中有没有指定的端口号，如果没有的话则运行在8000端口上。</p>
 			<p> 同理我们可以先设置好几套config，再根据全局变量中的环境参数调用不用的config。直接贴上问题中的代码吧</p>
 <pre class="prettyprint lang-javascript">
 /* 首先以在运行程序时就给环境变量赋值 */
@@ -49,6 +49,42 @@ module.exports = function(){
     }
 };
 </pre>			
+			<p><code>app.configure</code>也可以根据需要在express中对不同环境进行配置, 在官方的API中就有一个这样很好的例子</p>
+<pre class="prettyprint lang-javascript">
+/* 首先以在运行程序时就给环境变量赋值 */
+NODE_ENV=production node app.js
+</pre>			
+<p>准备好一个config.js专门用来配置之间的切换</p>
+<pre class="prettyprint lang-javascript">
+// all environments
+app.configure(function(){
+  app.set('title', 'My Application');
+})
+
+// development only
+app.configure('development', function(){
+  app.set('db uri', 'localhost/dev');
+})
+
+// production only
+app.configure('production', function(){
+  app.set('db uri', 'n.n.n.n/prod');
+})</pre>		
+			<p>以上的代码就相当于</p>			
+<pre class="prettyprint lang-javascript">
+// all environments
+app.set('title', 'My Application');
+
+// development only
+if ('development' == app.get('env')) {
+  app.set('db uri', 'localhost/dev');
+}
+
+// production only
+if ('production' == app.get('env')) {
+  app.set('db uri', 'n.n.n.n/prod');
+}</pre>				
+			<p>上面的<code>app.get('env')</code>其实获得的就是就是<code>process.env.NODE_ENV</code>的值。</p>
 			<br>
 			<h4>Package.json</h4>
 			<p>在上面的目录结构中最后还剩一个package.json文件，开始玩node.js的时候最不重视的就是这个文件，但现在我觉得非常重要。它最实际的功能是，把你这个程序所依赖的库和他们的版本信息放入其中，其他人如果想在他的电脑上运行你的程序的话，进入根目录后，只需要运行<code>npm install</code>, 就能一次性的安装这些依赖库。</p>

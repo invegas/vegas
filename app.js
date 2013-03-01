@@ -7,6 +7,9 @@ var express = require('express'),
 
 var app = express();
 
+console.log(app.get("env"));
+// console.log(process.env.NODE_ENV);
+
 //config
 app.configure(function () {
 	app.use(express.cookieParser());
