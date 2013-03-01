@@ -14,7 +14,7 @@ app.configure(function () {
 		cookie: {
 			httpOnly: true, 
 			maxAge: null
-		},
+		}, 
 		secret: 'blog'
 	}));
 	app.use(express.compress());
