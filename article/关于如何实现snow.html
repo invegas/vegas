@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Snow demo</title>
+	<link rel="stylesheet" type="text/css" href="css/bootstrap.css">
+	<link rel="stylesheet" type="text/css" href="prettify/sunburst.css">
+	<script type="text/javascript" src="prettify/prettify.js"></script>	
+	<style type="text/css">
+		body {
+			font-family: '微软雅黑';
+		}
+		blockquote p{
+			font-style: italic;
+			font-size: 12px;
+		}
+	</style>
+</head>
+<body onload="prettyPrint()">
+	<div class="container">
+		<div class="row">
+			<div class="span1"></div>
+			<div class="span6">
+				<h3>如何组织Html元素与如何进行CSS命名（上）</h3>
+			</div>
+			<div class="span4"></div>
+			<div class="span1"></div>
+		</div>		
+		<div class="row">
+			<div class="span1"></div>
+			<div class="span6">
+
+
+				<!--  -->
+				<p>这个demo的想法来源于另一个demo, <a href="http://thecodeplayer.com/walkthrough/html5-canvas-snow-effect" target="_blank">http://thecodeplayer.com/walkthrough/html5-canvas-snow-effect</a> ,有关粒子算法也是照搬它的，我只是做了一些修改，比如让雪只允许从左往右飘动，使雪的数量， 速度可控。</p>
+				<h3>雪：粒子效果</h3>
+				<p>下面是粒子效果的面向过程的代码（网页中我已经模块化了，不易于讲解），详细的解释都在注释中</p>
+<pre class="prettyprint lang-javascript">
+//获取canvas
+var canvas = document.getElementById("canvas");
+var ctx = canvas.getContext("2d");
+
+//获取当前浏览器窗口viewport的 长宽
+//记得要给document 绑定一个resize事件，
+//每一次resize都要重新更新W 和 H
+var W = window.innerWidth;
+var H = window.innerHeight;
+//并且赋值给 canvas, 
+//canvas的长宽必须作为tag的属性而不是css可控的
+canvas.width = W;
+canvas.height = H;
+
+//开始生成粒子
+var mp = 25; //最大粒子数
+var particles = [];
+// 生成粒子，存入一个数组中
+for(var i = 0; i < mp; i++)
+{
+    particles.push({
+		//每个粒子的属性有
+		//随机x坐标 根据浏览器宽
+		x: Math.random()*W, 
+		//随机Y坐标 根据浏览器高
+		y: Math.random()*H, 
+		//粒子半径 随机生成
+		r: Math.random()*4+1,
+		//粒子重量 
+		d: Math.random()*mp 
+	})
+}
+
+// 绘制当前帧
+function draw()
+{
+	// 一下都是基本的canvas的API，
+	//在这里就不详解了，
+	//谷歌canvas的API文档吧
+	ctx.clearRect(0, 0, W, H);
+	ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
+	ctx.beginPath();
+	for(var i = 0; i < mp; i++)
+	{
+		var p = particles[i];
+		ctx.moveTo(p.x, p.y);
+		ctx.arc(p.x, p.y, p.r, 0, Math.PI*2, true);
+	}
+	ctx.fill();
+
+	// 更新下一帧
+	update();
+}
+
+// 绘制下一帧
+function update()
+{	
+	//下面将会用sin和cos函数计算出粒子
+	//需要横向移动和纵向移动的偏移量
+	//保证粒子会在斜方向上直线移动
+	//角度
+    angle = 2;
+
+	for(var i = 0; i < mp; i++)
+	{
+		var p = particles[i];
+
+		// 单位时间内，Y轴方向移动距离越大，
+		// 纵向速度越快（粒子越重）
+		// 并且考虑到透视原理，
+		// 越大的粒子里用户越近，
+		// 纵向速度应该越快；
+		// 反之，越小的粒子越慢
+        p.y += Math.cos(angle) + weight + p.r/2;
+        // 单位时间内，
+        // X轴方向移动距离越大，
+        // 纵向速度越快 （风速）
+        p.x += Math.sin(angle) * speed;
+		
+        // 如果此时粒子的位置已经到画面外了（右下方），
+        // 要重新让他们的位置回到屏幕的左上方
+        if(p.x > W || p.x < 0 || p.y > H) {
+        	// 还有一个问题需要处理
+        	// 可以想象，如果粒子总是往右下角飘动，
+        	// 那么左下角会出现一块空白, 所以
+
+        	// 三分之二的粒子 
+        	// 从距屏幕上方10px 处进行掉落，
+        	// 并且横向允许随机
+            if (i%3 > 0) {
+                particles[i] = {x: Math.random()*W, y: -10, r: p.r, d: p.d};
+            } else {
+            // 三分之一的粒子，
+            // 为了弥补左下方的空白，
+            // 强制从X轴最左端掉落，
+            // Y轴随意
+                particles[i] = {x: 0, y: Math.random()*H, r: p.r, d: p.d};
+            }
+        }
+	}
+}
+
+//FPS: 33
+setInterval(draw, 33);
+</pre>					
+			<h3>Parallax</h3>
+			<p>这是一个去年比较火的技术，效果惊艳，但我很好奇为什么去年才被发现
+至少我觉得一点难度都没有，这个技术就不详解了，netplusde的入门教程，关键在于控制
+容器的背景图的<code>background-position</code></p>
+			<p>遇到了一个问题值得一提</p>
+
+
+			</div>
+			<div class="span4"></div>
+			<div class="span1"></div>
+		</div>
+	</div>
+	<script type="text/javascript" src="js/bootstrap.js"></script>
+</body>
+</html>
