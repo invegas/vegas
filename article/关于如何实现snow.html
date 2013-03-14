@@ -20,7 +20,7 @@
 		<div class="row">
 			<div class="span1"></div>
 			<div class="span6">
-				<h3>如何组织Html元素与如何进行CSS命名（上）</h3>
+				<h3>HTML5粒子效果与parallax效果结合</h3>
 			</div>
 			<div class="span4"></div>
 			<div class="span1"></div>
@@ -30,8 +30,10 @@
 			<div class="span6">
 
 
-				<!--  -->
-				<p>这个demo的想法来源于另一个demo, <a href="http://thecodeplayer.com/walkthrough/html5-canvas-snow-effect" target="_blank">http://thecodeplayer.com/walkthrough/html5-canvas-snow-effect</a> ,有关粒子算法也是照搬它的，我只是做了一些修改，比如让雪只允许从左往右飘动，使雪的数量， 速度可控。</p>
+				<p>这篇文章主要是对Jimmy Demo一些技术的讲解，主要是用HTML5 canvas绘制飘雪效果。还有parallax效果。如果你还没有看过这个demo的话，可以移步至这里</p>
+				<p><a target="_blank" href="http://qingbob.com/project/jimmy/index.html">Jimmy Snow</a></p>
+				
+				<p>这个demo的想法来源于另一个demo: <a href="http://thecodeplayer.com/walkthrough/html5-canvas-snow-effect" target="_blank">html5-canvas-snow-effect</a> ,有关粒子算法也是照搬它的，我只是做了一些修改，比如让雪只允许从左往右飘动，使雪的数量， 速度可控。</p>
 				<h3>雪：粒子效果</h3>
 				<p>下面是粒子效果的面向过程的代码（网页中我已经模块化了，不易于讲解），详细的解释都在注释中</p>
 <pre class="prettyprint lang-javascript">
@@ -142,12 +144,12 @@ setInterval(draw, 33);
 </pre>					
 			<h3>Parallax</h3>
 			<p>这是一个去年比较火的技术，效果惊艳，但我很好奇为什么去年才被发现。
-至少我觉得一点难度都没有，这个技术就不详解了，tutsplus上有一个<a href="http://net.tutsplus.com/tutorials/html-css-techniques/simple-parallax-scrolling-technique/?search_index=1">入门教程</a>，我觉得已经够了。 关键在于控制
+至少我觉得一点难度都没有，这个技术就不详解了，tutsplus上有一个<a target="_blank" href="http://net.tutsplus.com/tutorials/html-css-techniques/simple-parallax-scrolling-technique/?search_index=1">入门教程</a>，我觉得已经够了。 关键在于控制
 容器的背景图的<code>background-position</code></p>
 			<p>再推荐两个惊艳的parallax网站</p>
 			<ul>
-				<li><a href="http://www.bbc.co.uk/news/entertainment-arts-20026367">http://www.bbc.co.uk/news/entertainment-arts-20026367</a></li>
-				<li><a href="http://hobolobo.net/">http://hobolobo.net/</a></li>
+				<li><a target="_blank" href="http://www.bbc.co.uk/news/entertainment-arts-20026367">http://www.bbc.co.uk/news/entertainment-arts-20026367</a></li>
+				<li><a target="_blank" href="http://hobolobo.net/">http://hobolobo.net/</a></li>
 			</ul>
 			<p>遇到了一个问题值得一提</p>
 			<p>我希望首先要让浏览器在网页载入的时候滚动到最左方，但是chrome浏览器有个麻烦的地方在于，如果你滚动到某个位置然后刷新页面，浏览器会记录那个位置，之后打开的页面会自动帮你滚动到那个位置，首先要解决这个问题jquery的<code>scrollLeft(0)</code> , <code>document.location = "#"</code> 都不好使，最终的办法是</p>
@@ -202,7 +204,8 @@ var timeline = {
 </pre>
 		<p>我用一个函数监听页面的scroll事件，并且用一个公式计算出当前的页面滚动进度(progress)，
 	精确到小数点后面一位。一旦发现时间轴中的此刻存在时<code>if (timeline[progress])</code> 就依次执行该说的话，改变天气的颜色
-	改变路灯的颜色</p>
+	改变路灯的颜色。</p>
+		<p>这个Demo可以发挥空间余地更大，还有一些想法没有实现，技术一半，还需要相当的美工。所以，暂时告于段落了。</p>
 
 
 

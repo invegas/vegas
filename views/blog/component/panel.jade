@@ -18,12 +18,12 @@ div.secondary-nav(data-spy="affix", data-offset-top="260")
   //- li: a(href="/feed/feed.xml") 订阅
 
 div.category(class = (!req.params.title && req.route.path.indexOf('blog') > -1) ? 'show' : 'hide')
-   p 文章分类
-   ul.unstyled
-    li(class = (nav.category === 'blog') ? 'active' : ''): a.label(href="/") 全部    
-    li(class = (nav.category === 'node') ? 'active' : ''): a.label(href="/blog/category/nodejs") node.js
-    li(class = (nav.category === 'front') ? 'active' : ''): a.label(href="/blog/category/front-end") 前端
-    li(class = (nav.category === 'other') ? 'active' : ''): a.label(href="/blog/category/other") 其他
+   //- p 文章分类
+   //- ul.unstyled
+   //-  li(class = (nav.category === 'blog') ? 'active' : ''): a.label(href="/") 全部    
+   //-  li(class = (nav.category === 'node') ? 'active' : ''): a.label(href="/blog/category/nodejs") node.js
+   //-  li(class = (nav.category === 'front') ? 'active' : ''): a.label(href="/blog/category/front-end") 前端
+   //-  li(class = (nav.category === 'other') ? 'active' : ''): a.label(href="/blog/category/other") 其他
 script(type="text/javascript")
  prettyPrint()
  var _gaq = _gaq || [];
