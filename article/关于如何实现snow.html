@@ -141,10 +141,72 @@ function update()
 setInterval(draw, 33);
 </pre>					
 			<h3>Parallax</h3>
-			<p>这是一个去年比较火的技术，效果惊艳，但我很好奇为什么去年才被发现
-至少我觉得一点难度都没有，这个技术就不详解了，netplusde的入门教程，关键在于控制
+			<p>这是一个去年比较火的技术，效果惊艳，但我很好奇为什么去年才被发现。
+至少我觉得一点难度都没有，这个技术就不详解了，tutsplus上有一个<a href="http://net.tutsplus.com/tutorials/html-css-techniques/simple-parallax-scrolling-technique/?search_index=1">入门教程</a>，我觉得已经够了。 关键在于控制
 容器的背景图的<code>background-position</code></p>
+			<p>再推荐两个惊艳的parallax网站</p>
+			<ul>
+				<li><a href="http://www.bbc.co.uk/news/entertainment-arts-20026367">http://www.bbc.co.uk/news/entertainment-arts-20026367</a></li>
+				<li><a href="http://hobolobo.net/">http://hobolobo.net/</a></li>
+			</ul>
 			<p>遇到了一个问题值得一提</p>
+			<p>我希望首先要让浏览器在网页载入的时候滚动到最左方，但是chrome浏览器有个麻烦的地方在于，如果你滚动到某个位置然后刷新页面，浏览器会记录那个位置，之后打开的页面会自动帮你滚动到那个位置，首先要解决这个问题jquery的<code>scrollLeft(0)</code> , <code>document.location = "#"</code> 都不好使，最终的办法是</p>
+<pre class="prettyprint lang-javascript">
+// 待浏览器执行完它的动作之后我们再重置一遍
+setTimeout (function () {
+	scrollTo(0,0);
+}, 100);
+</pre>
+			<p>有一个算法我失败了，在网页中你们可以看到有一个段落是关于回忆的，背景跟着滚动，我的初衷是：
+当该容器进入用户视野时，图片也刚好进入用户视野并且开始滚动（因为滚动中背景图片的background-position是不断变化的），并且当该容器从左侧移出浏览器时，背景图片
+也恰好滚动完毕，从左侧滚出。但是这个算法失败了，用background-repeat来掩饰了一下。</p>
+			<h3>Timeline</h3>
+			<p>下面是我的时间轴对象，每一个key对应此时此刻应该发生的事件，包括，应该说的话，天空的颜色，灯光的强度</p>
+<pre class="prettyprint lang-javascript">
+var timeline = {
+	0.1: {
+		sayWord:"It's cold here, and it's going to dark, I need move on."
+	},
+	0.2: {
+		skyColor: "#032435",
+		light: 0.2
+	},
+	0.3: {
+		skyColor: "#032435",
+		light: 0.7,
+		sayWord: "It remind me ofsomething...the first time I met her."
+	},
+	0.4: {
+		skyColor: "#032435",
+		light: 1
+	},
+	0.5: {
+		skyColor: "#032435",
+		light: 1,
+		sayWord: "However...everything is gone."
+	},
+	0.6: {
+		skyColor: "#032435",
+		light: 1
+	},
+	0.7: {
+		skyColor: "#41677a",
+		light: 0.7,
+		sayWord: "......"
+	},
+	0.8: {
+		skyColor: "#5e879b",
+		light: 0.2
+	}							
+}
+</pre>
+		<p>我用一个函数监听页面的scroll事件，并且用一个公式计算出当前的页面滚动进度(progress)，
+	精确到小数点后面一位。一旦发现时间轴中的此刻存在时<code>if (timeline[progress])</code> 就依次执行该说的话，改变天气的颜色
+	改变路灯的颜色</p>
+
+
+
+
 
 
 			</div>
