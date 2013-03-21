@@ -182,3 +182,17 @@ my.toString();
 - 然后去my的prototype中查找，即F的实例中查找：没有
 - 去F的prototype中查找：有
 
+### 把最后一个方法提取为一个方法:
+
+```
+function extend(Child, Parent) {
+  var F = function(){};
+  F.prototype = Parent.prototype;
+  Child.prototype = new F();
+  Child.prototype.constructor = Child;
+  Child.uber = Parent.prototype;
+}
+extend(TwoDShape, Shape);
+extend(Triangle, TwoDShape);
+```
+
