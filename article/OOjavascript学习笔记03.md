@@ -43,3 +43,19 @@ function deepCopy(p, c) {
 总而言之，和上一集说的一样，如果继承使用的是浅拷贝，那么
 子类对该属性的修改回影响父类，如果使用的是深拷贝，那么
 子类对继承属性的修改则不会影响父类的该元素
+
+鉴于“对象是对对象的继承”，大神Douglas Crockford提出了这样
+一种方法：
+
+```
+function object(o) {
+  var n;
+  function F() {}
+  F.prototype = o;
+  n = new F();
+
+  n.uber = o;//如果你想始终保持和父类的联系的话，生成这么一个指针
+  return n;
+}
+```
+
