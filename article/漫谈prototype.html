@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>漫谈prototype</title>
+	<link rel="stylesheet" type="text/css" href="css/bootstrap.css">
+	<link rel="stylesheet" type="text/css" href="prettify/sunburst.css">
+	<script type="text/javascript" src="prettify/prettify.js"></script>	
+	<style type="text/css">
+		body {
+			font-family: '微软雅黑';
+		}
+		blockquote p{
+			font-style: italic;
+			font-size: 12px;
+		}
+	</style>
+</head>
+<body onload="prettyPrint()">
+	<div class="container">
+		<div class="row">
+			<div class="span1"></div>
+			<div class="span6">
+				<h3>如何组织Html元素与如何进行CSS命名（上）</h3>
+			</div>
+			<div class="span4"></div>
+			<div class="span1"></div>
+		</div>		
+		<div class="row">
+			<div class="span1"></div>
+			<div class="span6">
+
+
+
+			<p>javasscript的prototype原型链一直是一个难点，即使是在汤姆大叔的系列文章中描述的也不够全面。正巧这一阵的计划是扎实基础，决定写一篇文章来对prototype做一些总结，并且插入一些发散的内容（有一些是我在面试中遇过的）。供以后自己和各位参考。</p>		
+			<p>javascript的function一种对象(object)，他们有方法和属性，方法比如call/apply，而prototype则是function的一个属性。</p>
+<pre>
+	function和object到底是什么关系？function这种数据类型和其它的数据类型有什么区别？javascript有几种数据类型？
+</pre>
+			<p>一旦你定义了一个函数，它即自带了一个prototype属性</p>
+<pre class="prettyprint lang-javascript">
+function t() {};
+typeof t.prototype // "object";
+</pre>
+			<p>你可能已经知道使用函数作为一个构造函数，来生产一系列对象。比如</p>
+<pre class="prettyprint lang-javascript">
+function Some(name, color) {
+  this.name = name;
+  this.color = color;
+  this.method = function(){}
+}
+
+var a1 = new Some("Lee", "black"); //实例化一个对象
+</pre>
+			<p>上面的Some类的属性和方法也可以放在prototype对象中，比如</p>
+<pre class="prettyprint lang-javascript">
+function Some() {
+}
+Some.prototype.name = "Lee" //形式一
+Some.prototype = { //形式二
+	name: "lee",
+	color: "black",
+	method: function () {
+
+	}
+}
+
+var a1 = new Some("Lee", "black"); //实例化一个对象
+</pre>
+			<p>虽然形式不同，但至少现在使用起来的效果是一致的。当你使用a.Lee或者a.method时，结果是一样的，现在还看不出分别</p>
+			<strong>Ok，那么第一点要注意的是，prototype是活着(live)的属性！</strong>
+<pre class="prettyprint lang-javascript">
+function Some() {}
+var a = new Some();
+a.method // unfefined
+
+Some.prototype.method = function () {
+	console.log("hello");
+}
+
+a.method // function () {console.log("Hello")}
+</pre>
+			<p>上面的代码想说明的是，在生成实例a时，构造函数没有method方法，所以a也没有，可以理解；但是之后构造函数在prototype属性里又添加上去了，虽然是在a生成之后添加的，但是a仍然照样拥有，<strong>与构造函数添加的时间无关。</strong></p>
+
+			<strong>第二个问题来了，如果这个对象内部和prototype都定义了相同的字段怎么办，比如</strong>
+<pre class="prettyprint lang-javascript">
+function Some() {
+	this.color = "yellow";
+}
+Some.prototype.color = "black";
+
+var a = new Some();
+a.color //?
+</pre>
+			<p>上面的代码中，我在对象的内部和prototype上分别都定义了color，当我从实例中访问的时候，应该显示的是哪一个颜色？</p>
+
+
+			</div>
+			<div class="span4"></div>
+			<div class="span1"></div>
+		</div>
+	</div>
+	<script type="text/javascript" src="js/bootstrap.js"></script>
+</body>
+</html>
