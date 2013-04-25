@@ -67,7 +67,9 @@ Some.prototype = { //形式二
 var a1 = new Some("Lee", "black"); //实例化一个对象
 </pre>
 			<p>虽然形式不同，但至少现在使用起来的效果是一致的。当你使用a.Lee或者a.method时，结果是一样的，现在还看不出分别</p>
+			<br>
 			<strong>Ok，那么第一点要注意的是，prototype是活着(live)的属性！</strong>
+			<br>
 <pre class="prettyprint lang-javascript">
 function Some() {}
 var a = new Some();
@@ -81,7 +83,7 @@ a.method // function () {console.log("Hello")}
 </pre>
 			<p>上面的代码想说明的是，在生成实例a时，构造函数没有method方法，所以a也没有，可以理解；但是之后构造函数在prototype属性里又添加上去了，虽然是在a生成之后添加的，但是a仍然照样拥有，<strong>与构造函数添加的时间无关。</strong></p>
 
-			<strong>第二个问题来了，如果这个对象内部和prototype都定义了相同的字段怎么办，比如</strong>
+			<p>第二个问题来了，如果这个对象内部和prototype都定义了相同的字段怎么办，比如</p>
 <pre class="prettyprint lang-javascript">
 function Some() {
 	this.color = "yellow";
@@ -92,7 +94,23 @@ var a = new Some();
 a.color //?
 </pre>
 			<p>上面的代码中，我在对象的内部和prototype上分别都定义了color，当我从实例中访问的时候，应该显示的是哪一个颜色？</p>
+			<br>
+			<p><strong>要注意的是第二点，javascript引擎首先会检查a的属性里有没有color，如果没有的话去它的构造函数的prototype(a.constructor.prototype)里有没有该属性</strong></p>
+			<br>
+			<p>让我们再看的远一点，任何一个对象都应该有自己的构造函数，函数的prototype属性也是个对象，那它的构造函数是什么？</p>
+<pre class="prettyprint lang-javascript">
+function Some() {
+	this.color = "yellow";
+}
+var a = new Some();
 
+a.constructor.prototype.constructor 
+// function Some() {this.color = "yellow";}
+
+a.constructor.prototype.constructor.prototype 
+// Some {}
+</pre>
+			<p>上面的原型链可以无限的追溯下去，<strong>通过原型链，可以追溯到最终的构造函数<code>Object()</code></strong>，这也就解释了，为什么即使我们没有在函数上定义<code>toString()</code>函数，<code>a.toString()</code>的方法也是存在的，因为它最终调用的追溯到的Object的toString方法。</p>
 
 			</div>
 			<div class="span4"></div>
