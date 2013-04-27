@@ -31,7 +31,7 @@
 
 
 
-			<p>javasscript的prototype原型链一直是一个难点，即使是在汤姆大叔的系列文章中描述的也不够全面。正巧这一阵的计划是扎实基础，决定写一篇文章来对prototype做一些总结，并且插入一些发散的内容（有一些是我在面试中遇过的）。供以后自己和各位参考。</p>		
+			<p>javasscript的prototype原型链一直是一个难点，这篇文章是对自己这段时期学习的一个总结，在这里不谈ECMAScript标准，也不会用UML图画出各种关系（结合这两方面谈的文章非常的多），只力求最浅显易懂，深入浅出，供以后自己和各位参考。</p>		
 			<p>javascript的function一种对象(object)，他们有方法和属性，方法比如call/apply，而prototype则是function的一个属性。</p>
 <pre>
 	function和object到底是什么关系？function这种数据类型和其它的数据类型有什么区别？javascript有几种数据类型？
@@ -111,6 +111,8 @@ a.constructor.prototype.constructor.prototype
 // Some {}
 </pre>
 			<p>上面的原型链可以无限的追溯下去，<strong>通过原型链，可以追溯到最终的构造函数<code>Object()</code></strong>，这也就解释了，为什么即使我们没有在函数上定义<code>toString()</code>函数，<code>a.toString()</code>的方法也是存在的，因为它最终调用的追溯到的Object的toString方法。</p>
+			<p><strong>新的问题是，如何区分自己的property和原型链上的属性，并且你能保证所有的属性都是可以访问的吗？</strong></p>
+			<p>众所周知，用<code>for...in</code>循环就可以解决这个问题</p>
 
 			</div>
 			<div class="span4"></div>
