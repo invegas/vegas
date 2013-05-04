@@ -133,7 +133,69 @@ console.log(c.deep);
 			<p>当我们要访问c的deep属性时</p>
 			<ul>
 				<li>首先去c对象下查看有没有deep属性，没有</li>
-				<li>再去c.construct.prototype对象的属性里查找</li>
+				<li>再去c.construct.prototype对象的属性里查找,Parent的实例里查找，有</li>
+			</ul>
+			<p>但是上面的代码有一个问题，当你不断实例化Child时，Parent也不会被实例化，都会生成一个deep载入内存中，如果这个deep是共享的话，不如把deep放在prototype中</p>
+<pre class="prettyprint lang-javascript">
+function Parent() {}
+Parent.prototype.deep = "Hello";
+
+function Child() { this.shallow = "World"; }
+
+Child.prototype = new Parent();
+
+var c = new Child();
+
+console.log(c.deep);
+</pre>		
+			<p>当我们要访问c的deep属性时</p>
+			<ul>
+				<li>首先去c对象下查看有没有deep属性，没有</li>
+				<li>再去c.construct.prototype对象的属性里查找,Parent的实例parent里查找，没有</li>
+				<li>再去parent.construct.prototype查找deep，有</li>
+			</ul>				
+			<p>这么做的弊端之一就是在查找某个属性的时候可能会多查找一轮</p>
+			<p>让我们继续改进，我们发现我们需要的deep只在Parent的prototype上，那么其实我只需要Parent的prototype而不是Parent的实例</p>
+<pre class="prettyprint lang-javascript">
+function Parent() {}
+Parent.prototype.deep = "Hello";
+
+function Child() { this.shallow = "World"; }
+
+Child.prototype = Parent.prototype;
+
+var c = new Child();
+
+console.log(c.deep);
+</pre>		
+			<p>这样既避免了Parent的实例化，又避免了上一个例子中多一步的查找。但是有一个副作用，因为是对对象直接的引用，所以当Child.prototype.deep被修改时，Parent.prototype.deep也会被修改。那我们继续优化的目标就很明确了，要阻止这种对父类prototype的直接引用。</p>
+			<p>于是我们决定使用一个中间变量</p>
+<pre class="prettyprint lang-javascript">
+function Parent() {}
+Parent.prototype.deep = "Hello";
+
+// 注意，来了
+var F = function () {};
+F.prototype = Parent.prototype;
+
+function Child() { this.shallow = "World"; }
+Child.prototype = new F();
+
+var c = new Child();
+
+console.log(c.deep);
+</pre>				
+			<p>我们用F来作为一个中间变量，来阻止child对deep的修改可能影响parent</p>
+			<p>当我们要访问c的deep属性时</p>
+			<ul>
+				<li>首先去c对象下查看有没有deep属性，没有</li>
+				<li>再去c.construct.prototype对象的属性里查找,F的实例里查找，没有</li>
+				<li>再去F.construct.prototype查找deep，有</li>
+			</ul>	
+			<p>让我们来捋一捋为什么对Child.prototype的修改不会影响Parent.prototype</p>
+			<ul>
+				<li>在上一个例子中，我们对Child.prototype的操作就是对Parent.prototype的操作，<strong>无论读还是写，用的是别人的</strong></li>
+				<li>在这个例子中，Child.prototype不是对Parent的直接引用，而是一个新的空对象。在没有deep而我们需要deep时，被迫去Child.prototype的构造函数上去找，追溯到了Parent.protoype，而当我们需要写时，操纵的其实是<code>Child.prototype = {}</code>这个空对象。</li>
 			</ul>
 
 
