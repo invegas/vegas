@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Javascript: 你真的了解函数声明吗？</title>
+	<link rel="stylesheet" type="text/css" href="css/bootstrap.css">
+	<link rel="stylesheet" type="text/css" href="prettify/sunburst.css">
+	<script type="text/javascript" src="prettify/prettify.js"></script>	
+	<style type="text/css">
+		body {
+			font-family: '微软雅黑';
+		}
+		blockquote p{
+			font-style: italic;
+			font-size: 12px;
+		}
+	</style>
+</head>
+<body onload="prettyPrint()">
+	<div class="container">
+		<div class="row">
+			<div class="span1"></div>
+			<div class="span6">
+				<h3>Javascript: 你真的了解函数声明吗？</h3>
+			</div>
+			<div class="span4"></div>
+			<div class="span1"></div>
+		</div>		
+		<div class="row">
+			<div class="span1"></div>
+			<div class="span6">
+
+
+
+
+			<p>这篇文章还是对基础的复习，对面试经历的一个总结。</p>
+			<p>之前的面试中遇到过一道面试题</p>
+<pre class="prettyprint lang-javascript">
+var a = 10;
+(function () {
+	console.log(a); 
+	var a = 20;
+})()
+</pre>	
+			<ul>
+				<li>短短5行代码log的结果是什么？</li>
+				<li>如果把<code>var a = 20;</code>和<code>console.log(a)</code>语句顺序对调呢？</li>
+			</ul>
+			<p>这道题目的答案是<code>undefined</code>。不是10。</p>
+
+
+
+
+
+
+			</div>
+			<div class="span4"></div>
+			<div class="span1"></div>
+		</div>
+	</div>
+	<script type="text/javascript" src="js/bootstrap.js"></script>
+</body>
+</html>
