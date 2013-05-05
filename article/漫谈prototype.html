@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Javascript: 从prototype漫谈到继承</title>
+	<title>Javascript: 从prototype漫谈到继承(1)</title>
 	<link rel="stylesheet" type="text/css" href="css/bootstrap.css">
 	<link rel="stylesheet" type="text/css" href="prettify/sunburst.css">
 	<script type="text/javascript" src="prettify/prettify.js"></script>	
@@ -20,7 +20,7 @@
 		<div class="row">
 			<div class="span1"></div>
 			<div class="span6">
-				<h3>Javascript: 从prototype漫谈到继承</h3>
+				<h3>Javascript: 从prototype漫谈到继承(1)</h3>
 			</div>
 			<div class="span4"></div>
 			<div class="span1"></div>
@@ -28,6 +28,8 @@
 		<div class="row">
 			<div class="span1"></div>
 			<div class="span6">
+
+
 
 
 
@@ -117,7 +119,7 @@ a.constructor.prototype.constructor.prototype
 				<li>注意<code>propertyIsEnumerable()</code>方法，虽然该方法名字是“可枚举的属性”，但是原型链中所有的属性都会反悔false，即使是可枚举的</li>
 			</ul>
 			<P>还有一个对象的属性叫做__prop__，个人认为用处不大，只推荐在调试的时候使用，具体用法google去吧</P>
-			<h3>继承</h3>
+			<h3>关于原型的继承</h3>
 			<p>如何写一个好的继承方法？这是一个逐渐演化过程，先从最简单的继承谈起</p>
 <pre class="prettyprint lang-javascript">
 function Parent() { this.deep = "Hello"; }
@@ -197,6 +199,22 @@ console.log(c.deep);
 				<li>在上一个例子中，我们对Child.prototype的操作就是对Parent.prototype的操作，<strong>无论读还是写，用的是别人的</strong></li>
 				<li>在这个例子中，Child.prototype不是对Parent的直接引用，而是一个新的空对象。在没有deep而我们需要deep时，被迫去Child.prototype的构造函数上去找，追溯到了Parent.protoype，而当我们需要写时，操纵的其实是<code>Child.prototype = {}</code>这个空对象。</li>
 			</ul>
+			<p>于是我们把最后一个代码片段抽象为一个方法</p>
+<pre class="prettyprint lang-javascript">
+function extend(Child, Parent) {
+  var F = function(){};
+  F.prototype = Parent.prototype;
+  Child.prototype = new F();
+  // 一旦重置了函数的prototype，需要重新赋值prototype.constructor，
+  // 忽略这方面的介绍
+  Child.prototype.constructor = Child;
+  // 保留对父类的引用，
+  // 忽略对这方面的介绍
+  Child.uber = Parent.prototype;
+}
+</pre>	
+
+
 
 
 			</div>
