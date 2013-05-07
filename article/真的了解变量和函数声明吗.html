@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Javascript: 你真的了解函数声明吗？</title>
+	<title>Javascript: 你真的了解变量声明吗？</title>
 	<link rel="stylesheet" type="text/css" href="css/bootstrap.css">
 	<link rel="stylesheet" type="text/css" href="prettify/sunburst.css">
 	<script type="text/javascript" src="prettify/prettify.js"></script>	
@@ -46,6 +46,41 @@ var a = 10;
 				<li>如果把<code>var a = 20;</code>和<code>console.log(a)</code>语句顺序对调呢？</li>
 			</ul>
 			<p>这道题目的答案是<code>undefined</code>。不是10。</p>
+			<p>关键在于javascript的变量声明有一个hoisting机制，变量声明永远都会被提升至函数的最顶端（注意测试还只是声明，还没有赋值）。其实上面的语句相当于：</p>
+<pre class="prettyprint lang-javascript">
+var a = 10;
+(function () {
+	var a; //在这里对变量hoisting，先声明
+	console.log(a); 
+	a = 20; //再赋值
+})()
+</pre>
+			<p>再精简一点:</p>
+<pre class="prettyprint lang-javascript">
+bla = 2
+var bla;
+ 
+// 这是分割线，上下代码的效果其实是一样的
+ 
+var bla;
+bla = 2;
+</pre>			
+			<p>也就是先使用，再声明（注意是声明，还没有赋值），这样一来，声明和赋值就被分开来了。所以最佳实践都推荐最好在函数的顶端把需要使用的变量首先声明一遍。</p>
+			<p>同理，我们可以理解下面的代码也是会报错的</p>
+<pre class="prettyprint lang-javascript">
+f() //明显这里有错，因为f还没有被赋一个函数
+var f = function () {
+	console.log("Hello");
+}
+</pre>
+			<p>但有一个问题，如果将上例f的函数声明修改一下，还会报错吗</p>
+<pre class="prettyprint lang-javascript">
+f() //可以运行吗？
+function f() {
+	console.log("Hello");
+}
+</pre>			
+			<p>这里我其实想问的是关于函数声明<code>var f = function () {}</code>和<code>function f() {}</code>的差别在呢</p>
 
 
 
