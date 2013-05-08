@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Javascript: 你真的了解变量声明吗？</title>
+	<title>谈javascript变量声明</title>
 	<link rel="stylesheet" type="text/css" href="css/bootstrap.css">
 	<link rel="stylesheet" type="text/css" href="prettify/sunburst.css">
 	<script type="text/javascript" src="prettify/prettify.js"></script>	
@@ -46,7 +46,7 @@ var a = 10;
 				<li>如果把<code>var a = 20;</code>和<code>console.log(a)</code>语句顺序对调呢？</li>
 			</ul>
 			<p>这道题目的答案是<code>undefined</code>。不是10。</p>
-			<p>关键在于javascript的变量声明有一个hoisting机制，变量声明永远都会被提升至函数的最顶端（注意测试还只是声明，还没有赋值）。其实上面的语句相当于：</p>
+			<p>关键在于javascript的变量声明有一个hoisting机制，变量声明永远都会被提升至作用域的最顶端（注意测试还只是声明，还没有赋值）。其实上面的语句相当于：</p>
 <pre class="prettyprint lang-javascript">
 var a = 10;
 (function () {
@@ -80,10 +80,41 @@ function f() {
 	console.log("Hello");
 }
 </pre>			
-			<p>这里我其实想问的是关于函数声明<code>var f = function () {}</code>和<code>function f() {}</code>的差别在呢</p>
-
-
-
+			<p>这里我其实想强调的是两种函数声明的<code>var f = function () {}</code>和<code>function f() {}</code>差别。</p>
+			<p>事实上，javascript中所有的函数声明(<strong>function declarations</strong>)和变量声明(<strong>variable declarations</strong>)都会被提升(hoisted)至它们所在作用域的最顶端。需要注意的是函数声明只有一种，也就是<code>function f() {}</code>的形式。而<code>var f = function () {}</code>是什么？你可以理解为它是将一个匿名函数(当然也可以取函数名，下面会解释)赋值给了一个变量。</p>
+			<p>就哪上面两个例子来说，同样是想实现先使用再定义的效果。只有第二种有用，虽然函数f在使用之后才定义，但是在javascript解释器中，它仍然是先于执行语句被定义的。</p>
+			<p>而第一个例子，执行的效果是这样的</p>
+<pre class="prettyprint lang-javascript">
+var f;
+f() //没有定义任何函数，当然无法执行
+f = function () {
+	console.log("Hello");
+}
+</pre>
+			<p>这么看来，虽然javascript是允许先执行再声明，<strong>但切勿这么做，请遵循先声明再使用的好习惯。</strong></p>
+			<p>再看看另一种情况，如果我把之前的函数定义</p>
+<pre class="prettyprint lang-javascript">
+var f = function () {};
+</pre>			
+			<ol>
+				<li>给右侧的匿名函数增加函数名</li>
+				<li>以右侧函数名来执行函数</li>
+				<li>能成功吗？</li>
+			</ol>
+<pre class="prettyprint lang-javascript">
+var f = function ab() {};
+ab();
+</pre>
+			<p>答案是否定的，因为上面的代码对f函数的定义是以<strong>命名函数表达式(Named Function Expressions)</strong>，而并非真正的函数声明，<strong>注意该函数名只在该函数的作用域内有用</strong>。下面这段代码充分说明了它的意义：</p>
+<pre class="prettyprint lang-javascript">
+var f = function foo(){
+	return typeof foo;
+};
+typeof foo; // "undefined"
+f(); // "function"
+</pre>
+			<p>那么如此声明还有什么意义呢？好吧，就我目前找到的资料而言，这样做的好处就是便于调试。</p>
+			<p>接下来考虑一些意想不到的边缘，虽然我觉得一个程序员写出下面的代码有点自找苦吃，而且应该是在实战中避免的，但作为考试的题目来说是值得一说的。</p>
 
 
 
