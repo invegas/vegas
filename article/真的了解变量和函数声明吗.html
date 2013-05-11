@@ -114,8 +114,23 @@ typeof foo; // "undefined"
 f(); // "function"
 </pre>
 			<p>那么如此声明还有什么意义呢？好吧，就我目前找到的资料而言，这样做的好处就是便于调试。</p>
-			<p>接下来考虑一些意想不到的边缘，虽然我觉得一个程序员写出下面的代码有点自找苦吃，而且应该是在实战中避免的，但作为考试的题目来说是值得一说的。</p>
-
+			<p>接下来考虑一些意想不到的边缘，虽然我觉得一个程序员写出下面的代码有点自找苦吃，而且应该是在实战中避免的，但作为考试的题目来说是值得一说的。比如对比下面两段代码:</p>
+<pre class="prettyprint lang-javascript">
+function value(){
+    return 1;
+}
+var value;
+alert(typeof value);    //"function"
+</pre>
+<pre class="prettyprint lang-javascript">
+function value(){
+    return 1;
+}
+var value = 1;
+alert(typeof value);    //"number"
+</pre>			
+			<p>第一段代码想说明的是<strong>函数声明会覆盖变量声明</strong>，注意是声明，还没有赋值。如代码中，虽然同名变量在函数后再次声明，但是typeof的结果仍然是function</p>
+			<p>第二段代码想说明的是<strong>函数声明不会覆盖变量赋值或者说初始化</strong>，如代码所示，不解释</p>
 
 
 			</div>
