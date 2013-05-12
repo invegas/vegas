@@ -130,7 +130,29 @@ var value = 1;
 alert(typeof value);    //"number"
 </pre>			
 			<p>第一段代码想说明的是<strong>函数声明会覆盖变量声明</strong>，注意是声明，还没有赋值。如代码中，虽然同名变量在函数后再次声明，但是typeof的结果仍然是function</p>
-			<p>第二段代码想说明的是<strong>函数声明不会覆盖变量赋值或者说初始化</strong>，如代码所示，不解释</p>
+			<p>第二段代码想说明的是<strong>函数声明不会覆盖变量赋值或者说初始化</strong>，如代码所示</p>
+			<p><strong>Name Resolution Order</strong></p>
+			<p>为什么会有上面的结果，为什么函数的声明会覆盖变量的声明。就是因为name resolution order。我不知道怎么翻译这个名词，暂且就翻译为<strong>名称解析顺序</strong>吧。</p>
+			<p>在javascript中，一个变量名(name)有四种方式进入作用域(scope)中</p>
+			<ul>
+				<li><strong>语言内置</strong>，所有的作用域中都有<code>this</code>和<code>arguments</code>关键字</li>
+				<li><strong>形式参数</strong>，函数的参数在整个作用域中都是有效的</li>
+				<li><strong>函数声明</strong></li>
+				<li><strong>变量声明</strong></li>
+			</ul>
+			<p>上面列出的四种顺序也正是由高到底的优先级的顺序（<strong>关于这点我有所保留，我测试的结果是参数和函数的优先级都会比语言内置的优先级高，你可以把形式参数取名为arguments，或者定义一个函数名为arguments，结果内置的argument说被覆盖了</strong>），一旦一个变量名已经声明了，那么它就不可能被其他更低优先级的变量声明形式所覆盖。</p>
+			<p>参考文章:</p>
+			<ul>
+				<li><a href="http://kangax.github.io/nfe/">Named function expressions demystified</a></li>
+				<li><a href="http://javascriptweblog.wordpress.com/2010/07/06/function-declarations-vs-function-expressions/">function-declarations-vs-function-expressions</a></li>
+				<li><a href="http://www.adequatelygood.com/JavaScript-Scoping-and-Hoisting.html">JavaScript Scoping and Hoisting</a></li>
+				<li><a href="http://www.nczonline.net/blog/2010/01/26/answering-baranovskiys-javascript-quiz/">Answering Baranovskiy’s JavaScript quiz</a></li>
+			</ul>
+			
+
+
+
+
 
 
 			</div>
