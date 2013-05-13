@@ -48,7 +48,51 @@
 					<li>bidi</li>
 					<li>以及各种综合和边缘情况</li>
 				</ul>
-				<p>其实最困难的是当你在谈一个概念的同时不得不对其他概念有所涉及。但其实所有的概念和方案都是为了解决问题而生，我打算从最简单的布局开始，以解决复杂的布局方案为线索，逐渐引入这些概念。</p>
+				<p>最困难的是当你在谈一个概念的同时不得不对其他概念有所涉及——但其实所有的概念和方案都是为了解决问题而生，我打算从最简单的布局开始，以解决复杂的布局方案为线索，逐渐引入这些概念。如果直接引用w3c的概念我感觉会有一些晦涩，w3c的文档要参考，更重要的是还要参考一些国外国内的通俗博客和实战经验，如果有不正确的地方请多多指正</p>
+				<br>
+				<h3>Normal Flow</h3>
+				<p>我倾向把normal flow翻译为标准流。当你在一个空白的网页上插入不同的标签div, p, span等，那么这些标签形成的元素将以何种标准进行排列？那就是标准流。</p>
+				<p>谈论标准流的前提是，页面上的所有元素都没有有关布局的css(float,display,position等)进行修饰，也就是说所有的元素要么是块状元素(block)，要么是行内元素(inline)</p>
+				<p>块状元素将在页面上或者包含他们的包含块(containing block)中，从左上方开始，并且是从垂直自上往下进行填充，不用担心横向，因为块级元素非常霸道，一个元素必定占一整行，即使你给它指定宽度，它所在的那一行余下的宽度也是属于它的，不会有后面的元素进来，即使后面的元素很窄能刚好插进来。而上下两个块之间的距离则根据他们的外边距和外边距的折叠规则(margin collapse)而定，这个后面会谈到。比如看下面这个例子</p>
+<pre class="prettyprint lang-css">
+div { border: 1px solid black; }
+div div { height: 100px; }
+.a { margin: 20px 0; }
+.b { margin: 30px 0; width: 100px; }
+.c { margin: -50px 0 0; }
+</pre>	
+<pre class="prettyprint lang-html">
+&lt;div&gt;
+    &lt;div class="a"&gt;&lt;/div&gt;
+    &lt;div class="b"&gt;&lt;/div&gt;
+    &lt;div class="c"&gt;&lt;/div&gt;
+&lt;/div&gt;
+</pre>
+<div style="border: 1px solid black;">
+	<div style="border: 1px solid black; height: 50px; margin: 10px 0;"></div>
+	<div style="border: 1px solid black; height: 50px; margin: 20px 0; width: 100px;"></div>
+	<div style="border: 1px solid black; height: 50px; margin: -30px 0 0;"></div>
+</div>
+				<p>而行内元素顾名思义，则优先进行横向排列，从容器的左上开始，后面的元素一个紧挨一个的排列在这一行中，只有当位置不够了，才会被挤到下一行去，</p>
+<pre class="prettyprint lang-css">
+div { width: 100px; border: 1px solid black;}
+span.a {background: yellow;}
+span.b {background: red;}
+span.c {background: blue;}
+</pre>	
+<pre class="prettyprint lang-html">
+&lt;div&gt;
+&lt;span class="a" &gt;This is an span element&lt;/span&gt;
+&lt;span class="b" &gt;This is another span&lt;/span&gt;
+&lt;span class="c" &gt;This is   the third span&lt;/span&gt;    
+&lt;/div&gt;
+</pre>
+<div style="width: 100px; border: 1px solid black;">
+	<span style="background: yellow;">This is an span element</span>
+	<span style="background: red;">This is another span</span>
+	<span style="background: blue;">This is   the third span</span>    
+</div>
+				<p>在标准流的状态下，如果两种元素混合在一起，那么将各自遵循各自的标准，不会有任何干扰。</p>
 
 
 
