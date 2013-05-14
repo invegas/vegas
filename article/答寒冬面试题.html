@@ -141,6 +141,13 @@ span.c {margin: 30px 0 0;}
 						<li>display: table-cell | table-caption | inline-block</li>
 					</ul>
 				</blockquote>
+				<p>然后这个独立布局的规则是这样的(<a target="_blank" href="http://www.smallni.com/haslayout-block-formatting-contexts/">摘自</a>)</p>
+				<blockquote>
+					<ul>
+						<li>在创建了 BFC的元素中，其子元素会一个接一个地放置。垂直方向上他们的起点是一个包含块的顶部，两个相邻的元素之间的垂直距离取决于 ‘margin’ 特性。在BFC中相邻的块级元素的垂直边距会折叠（collapse）。</li>
+						<li>在BFC 中，每一个元素左外边与包含块的左边相接触（对于从右到左的格式化，右外边接触右边）， 即使存在浮动也是如此（尽管一个元素的内容区域会由于浮动而压缩），除非这个元素也创建了一个新的BFC。</li>
+					</ul>
+				</blockquote>
 				<p>上面的定义是翻译自W3C的标准。因为自己经验有限，在这里我直接举出我找到的的BFC的经典用处，希望大家能从中体会。</p>
 				<p>在所有的文章中，被列举最频繁的例子莫过于<strong>阻止文字围绕浮动元素</strong>，请看下面代码</p>
 <pre class="prettyprint lang-css">
@@ -195,8 +202,28 @@ span.c {margin: 30px 0 0;}
 <div style="border: 1px solid black;overflow: hidden;">
 	<div style="width: 50px; height: 50px; background: blue; float: left;"></div>
 </div>
-				<p>于是成功了。其实解决这一类的问题应该算是<strong>清除浮动</strong>。这一类解决方案已经非常成熟了，并且一个好的方案知识点的信息量非常大，可以好好介绍一下。</p>
-
+				<p>于是成功了，并且此时当计算header的高度时，将把子元素的float元素的高度计算进来。其实解决这一类的问题应该算是<strong>清除浮动</strong>。这一类解决方案已经非常成熟了，并且一个好的方案知识点的信息量还是比较大的，可以好好介绍一下。</p>
+				<p><strong>用处三：创建了 BFC的元素不会与它们的子元素发生外边距折叠</strong></p>
+				<p>外边距折叠规则中有一条是，当赤裸裸的子元素（没有padding，border）与赤裸裸的父元素（还是没有padding，border）进行接触时，他们的外边距会按一定的规则进行折叠。比如</p>
+<pre class="prettyprint lang-css">
+div {margin:30px 0; background: yellow;}
+p {margin: 20px 0; background: blue;}
+</pre>	
+<pre class="prettyprint lang-html">
+&lt;div&gt;
+   &lt;p&gt;&lt;/p&gt;
+&lt;/div&gt;
+</pre>
+<div style="margin:30px 0; background: yellow;">
+	<p style="margin: 20px 0;background: blue;">This is text</p>
+</div>				
+				<p>看到上面因为父元素与子元素的外边距发生了折叠，父元素已经完全和子元素重合。如果元素是赤裸裸但又不想和父元素发生外边距折叠怎么办，那就给父元素设置BFC!</p>
+<pre class="prettyprint lang-css">
+div {margin:30px 0; background: yellow; overflow: hidden;}
+</pre>
+<div style="margin:30px 0; background: yellow; overflow: hidden;">
+	<p style="margin: 20px 0; background: blue;">This is text</p>
+</div>				
 			
 
 
