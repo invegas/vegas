@@ -48,7 +48,7 @@
 					<li>bidi</li>
 					<li>以及各种综合和边缘情况</li>
 				</ul>
-				<p>最困难的是当你在谈一个概念的同时不得不对其他概念有所涉及——但其实所有的概念和方案都是为了解决问题而生，我打算从最简单的布局开始，以解决复杂的布局方案为线索，逐渐引入这些概念。如果直接引用w3c的概念我感觉会有一些晦涩，w3c的文档要参考，更重要的是还要参考一些国外国内的通俗博客和实战经验，如果有不正确的地方请多多指正</p>
+				<p>最困难的是当你在谈一个概念的同时不得不对其他概念有所涉及——但其实所有的概念和方案都是为了解决问题而生，我打算从最简单的布局开始，以解决复杂的布局方案为线索，逐渐引入这些概念。本文的资料来源于国外国内的通俗博客和实战经验，如果直接引用w3c的概念我感觉会有一些晦涩（重要的是我看的也很头大），但仍然会做引用。本文只是抛砖引玉，如果有不正确的地方请多多指正。</p>
 				<br>
 				<h3>Normal Flow</h3>
 				<p>我倾向把normal flow翻译为标准流。当你在一个空白的网页上插入不同的标签div, p, span等，那么这些标签形成的元素将以何种标准进行排列？那就是标准流。</p>
@@ -92,12 +92,111 @@ span.c {background: blue;}
 	<span style="background: red;">This is another span</span>
 	<span style="background: blue;">This is   the third span</span>    
 </div>
-				<p>在标准流的状态下，如果两种元素混合在一起，那么将各自遵循各自的标准，不会有任何干扰。</p>
+				<p>在标准流的状态下，如果两种元素混合在一起，那么将各自遵循各自的标准，理论上是不会有干扰的。临时想到一个问题，如果块状和行内上下相邻，并且都配备有外边距，那么外边距怎么计算？再复杂一点，行内元素所在的那一行有好几个行内元素，并且每个的外边距都不相同，那么与垂直相邻的块状元素的距离怎么算？代码如下</p>
+<pre class="prettyprint lang-css">
+div { width: 100px; border: 1px solid black; margin: 20px;}
+span.a {margin: 10px 0 0;}
+span.b {margin: 20px 0 0;}
+span.c {margin: 30px 0 0;}
+</pre>	
+<pre class="prettyprint lang-html">
+&lt;div class="block"&gt;&lt;/div&gt;
+&lt;span class="a"&gt;This is a span&lt;/span&gt;
+&lt;span class="b"&gt;This is b span&lt;/span&gt;
+&lt;span class="c"&gt;This is c span&lt;/span&gt;
+</pre>
+				<p>这个问题还涉及另一个概念：盒子模型，如果又要展开又大了去了。在这里只说一点，<strong>行内元素的margin和padding只对它的左右元素有影响，对上下无影响</strong>，具体看下面代码</p>
+<pre class="prettyprint lang-css">
+.p { width: 200px; height: 50px; border: 1px solid black;}
+.span {margin: 20px;}
+</pre>	
+<pre class="prettyprint lang-html">
+&lt;p&gt;
+&lt;span&gt;this is span&lt;/span&gt;&lt;span class="span"&gt;this is span&lt;/span&gt;&lt;span&gt;this is span&lt;/span&gt;&lt;span&gt;this is span&lt;/span&gt;&lt;span&gt;this is span&lt;/span&gt;
+&lt;/p&gt;
+</pre>
+				<p style="width: 200px; height: 50px; border: 1px solid black;">
+						<span>this is span </span><span style="margin: 20px; display:inline;">this is span </span><span>this is span </span><span>this is span </span><span>this is span </span>				
+				</p>
+				<p>本节主要参考资料：</p>
+				<ul>
+					<li><a target="_blank" href="http://www.maxdesign.com.au/articles/inline/">Inline elements and padding</a></li>
+					<li><a target="_blank"href="http://www.w3.org/TR/CSS2/visuren.html#normal-flow">W3C: Normal flow</a></li>
+					<li><a target="_blank" href="http://webdesign.about.com/od/cssglossary/g/bldefnormalflow.htm">Webdesign:normal flow</a></li>
+					<li><a target="_blank" href="http://css.maxdesign.com.au/floatutorial/definitions.htm">Some definitions:Normal flow</a></li>
+				</ul>
+				<h3>BFC(Block Formatting Context)</h3>
+				<p>好吧，必须承认我也是第一接触BFC的概念，很惭愧，于是疯狂的查找资料，对它概念的介绍引用阿里巴巴用户体验部的<a target="_blank" href="http://www.aliued.cn/2012/12/31/css%E5%B8%83%E5%B1%80%E4%B8%AD%E4%B8%80%E4%B8%AA%E7%AE%80%E5%8D%95%E7%9A%84%E5%BA%94%E7%94%A8bfc%E7%9A%84%E4%BE%8B%E5%AD%90.html">一篇文章</a>的一段话</p>
+				<blockquote>
+					<p>什么是BFC(Block Formatting Context)，简单讲，它是提供了一个独立布局的环境，每个BFC都遵守同一套布局规则。例如，在同一个BFC内，盒子会一个挨着一个的排，相邻盒子的间距是由margin决定且垂直方向的margin会重叠。而float和clear float也只对同一个BFC内的元素有效。</p>
+				</blockquote>
+				<p>在提BFC的同时也不得不提另一个概念，IE的haslayout属性，一旦元素的这两个属性（haslayout在IE下）被触发，他们都能给自己提供一个独立的布局环境（我的疑问在于不独立的布局环境又是什么情况？）。当元素的CSS属性设置了下列之一时，即可创建一个BFC:</p>
+				<p>那么如何触发BFC，继续引用一淘的文章:</p>
+				<blockquote>
+					<p>非块级盒子的浮动元素、绝对定位元素及块级容器(比如inline-blocks，table-cells和table-captions)，以及overflow属性是visible之外任意值的块级盒子，都会创建了一个BFC。即当元素CSS属性设置了下列之一时，即可创建一个BFC:</p>
+					<ul>
+						<li>float：left | right</li>
+						<li>position：absolute | fixed</li>
+						<li>display: table-cell | table-caption | inline-block	</li>
+						<li>display: table-cell | table-caption | inline-block</li>
+					</ul>
+				</blockquote>
+				<p>上面的定义是翻译自W3C的标准。因为自己经验有限，在这里我直接举出我找到的的BFC的经典用处，希望大家能从中体会。</p>
+				<p>在所有的文章中，被列举最频繁的例子莫过于<strong>阻止文字围绕浮动元素</strong>，请看下面代码</p>
+<pre class="prettyprint lang-css">
+.item {width: 200px; height: 150px; border: 1px solid black;}
+.pic{width:80px;height:80px;margin:10px;background-color:#acdae5;float:left;}
+</pre>	
+<pre class="prettyprint lang-html">
+&lt;div class="item"&gt;
+	&lt;div class="pic">picture&lt;/div&gt;
+	&lt;p class="text"&gt;
+	测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试
+	&lt;/p&gt;
+&lt;/div&gt;
+</pre>
+<div class="item" style="width: 200px; height: 150px; border: 1px solid black;">
+    <div class="pic" style="width:80px;height:80px;margin:10px;background-color:#acdae5;float:left;">picture</div>
+    <p class=”text”>
+    	测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试
+    </p>
+</div>		
+				<p>此时我们要做一个重要的决定！就是阻止文字围绕左侧的浮动块——那就开启右侧文字的BFC属性,用overflow:hidden</p>		
+<pre class="prettyprint lang-css">
+.item {width: 200px; height: 150px; border: 1px solid black;}
+.pic{width:80px;height:80px;margin:10px;background-color:#acdae5;float:left;}
+.text {overflow: hidden;}
+</pre>	
+<div class="item" style="width: 200px; height: 150px; border: 1px solid black;">
+    <div class="pic" style="width:80px;height:80px;margin:10px;background-color:#acdae5;float:left;">picture</div>
+    <p class=”text” style="overflow:hidden;">
+    	测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试
+    </p>
+</div>		
+				<p><strong>用法二：创建了 BFC的元素中，浮动元素参与高度的计算</strong>，这个方法也可以用于消除因为子元素浮动引起的折叠</p>
+<pre class="prettyprint lang-css">
+.header {border: 1px solid black;}
+.logo {width: 50px; height: 50px; background: blue; float: left;}
+</pre>	
+<pre class="prettyprint lang-html">
+&lt;div class="header"&gt;
+   &lt;div class="logo"&gt;&lt;/div&gt;
+&lt;/div>
+</pre>
+<div style="border: 1px solid black;">
+	<div style="width: 50px; height: 50px; background: blue; float: left;"></div>
+</div>
+				<div class="clearfix"></div>
+				<p>这是一个很常见的问题，在网站有一个标题区域header，其中有一个logo，并且设置logo向左浮动。但问题是一旦logo向左浮动，它的包含块因为float的一些特性（后面介绍），自动折叠了起来</p>
+				<p>那么就设置包含块的BFC的属性吧，照上面可以使用overflow属性</p>
+<pre class="prettyprint lang-css">
+.header {border: 1px solid black; overflow:hidden;}
+</pre>					
+<div style="border: 1px solid black;overflow: hidden;">
+	<div style="width: 50px; height: 50px; background: blue; float: left;"></div>
+</div>
+				<p>于是成功了。其实解决这一类的问题应该算是<strong>清除浮动</strong>。这一类解决方案已经非常成熟了，并且一个好的方案知识点的信息量非常大，可以好好介绍一下。</p>
 
-
-
-<pre class="prettyprint lang-javascript">
-</pre>			
 			
 
 
