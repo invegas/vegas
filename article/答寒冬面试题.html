@@ -260,6 +260,16 @@ div { width: 200px; height: 40px; border: 1px solid black; position: relative; }
 <div style="width: 200px; height: 40px; border: 1px solid black; position: relative;background: blue;top: 10px; left: 10px;"></div>
 <div style="width: 200px; height: 40px; border: 1px solid black;"></div>				
 				<p>注意到虽然前两个元素虽然发生了移动，但是第三个元素并没有收到影响，并且前两个元素的移动都是根据自己的相对位移。<strong>如果这三个盒子还存在外边距的话，那么外边距的折叠效果仍然是与标准流保持一致的。</strong></p>
+				<p>再留意上面的一个细节，这三个容器我都没有设置z-index，你也可以通过firebug之类的工具查看到它们的z-index的确是auto；但却出现了有叠加的情况；</p>
+				<p>留意一个边界情况，如果偏移量有矛盾怎么办，比如</p>
+<pre class="prettyprint lang-css">
+.a {
+  left: 10px;
+  right: 10px;
+}
+</pre>					
+				<p><strong>记住这样一个原则，在矛盾的情况下left的优先级要比right高，top的优先级要比bottom高，即使right书写在left后面。</strong></p>
+				<h3>Containing Block & Position: absolute</h3>
 
 
 
