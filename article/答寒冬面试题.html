@@ -223,9 +223,43 @@ div {margin:30px 0; background: yellow; overflow: hidden;}
 </pre>
 <div style="margin:30px 0; background: yellow; overflow: hidden;">
 	<p style="margin: 20px 0; background: blue;">This is text</p>
-</div>				
-			
-
+</div>			
+				<p>以上是三个基本用处的介绍，至少我个人对BFC还不是很理解，比如拥有不同布局的元素究竟应该如何在BFC的元素中排列等。希望有经验的同学指点一下。</p>
+				<p>参考文章</p>
+				<ul>
+					<li><a href="http://www.aliued.cn/2012/12/31/css%E5%B8%83%E5%B1%80%E4%B8%AD%E4%B8%80%E4%B8%AA%E7%AE%80%E5%8D%95%E7%9A%84%E5%BA%94%E7%94%A8bfc%E7%9A%84%E4%BE%8B%E5%AD%90.html" target="_blank">CSS布局中一个简单的应用BFC的例子</a></li>
+					<li><a href="http://www.smallni.com/haslayout-block-formatting-contexts/" target="_blank">hasLayout && Block Formatting Contexts</a></li>
+					<li><a href="http://www.w3ctech.com/p/1101" target="_blank">更加直观地了解hasLayout和BFC</a></li>
+					<li><a href="http://stackoverflow.com/questions/6196725/how-does-the-css-block-formatting-context-work" target="_blank">How does the CSS Block Formatting Context work?</a></li>
+				</ul>
+				<p>上面的文章几乎都拿BFC与haslayout属性进行对比，上面的第二篇把异同之处都整理了出来。如果是页面布局方向的同学可以深入阅读。</p>
+				<h3>Position: relative</h3>
+				<p>Position有四种可选值，static，relative，absolute，fixed。当你不对元素做任何position属性时，默认即为static，<strong>注意此时你无法对元素的z-index值进行设置</strong>，只有当你把position设置为出static以外的值时，z-index才生效。所以最保险的作法是设置相对定位。</p>
+				<p>CSS2.1中元素是根据三种的位置方案(positioning modes or schemes)被布局的，分别是标准流(normal flow), 浮动(float)和绝对定位(absolute position)</p>
+				<p>相对定位虽然被改动了position值，但是仍然遵循标准流的规则。CSS中难点之一在于，如何根据当前元素的位置属性判断出相邻，或者后代的位置属性，而判断出当前元素的位置属性并不难。</p>
+				<p>你可以这么理解，相对定位的元素仍然处于标准流中，只要你没有设置偏移值(top, left, right, buttom)；如果你设置了偏移值，那么元素就会相对于你在标准流中的位置，依照值进行偏移。<strong>但你周围的元素会以为你还在标准流中</strong>，有一种灵魂出窍的感觉。见代码</p>
+<pre class="prettyprint lang-css">
+div { width: 200px; height: 40px; border: 1px solid black; position: relative; }
+.a {background: yellow; }
+.b {background: blue; }
+</pre>	
+<pre class="prettyprint lang-html">
+&lt;div class="a"&gt;&lt;/div&gt;
+&lt;div class="b"&gt;&lt;/div&gt;
+&lt;div&gt;&lt;/div&gt;
+</pre>
+<div style="width: 200px; height: 40px; border: 1px solid black; position: relative;background: yellow;"></div>
+<div style="width: 200px; height: 40px; border: 1px solid black; position: relative;background: blue;"></div>
+<div style="width: 200px; height: 40px; border: 1px solid black;"></div>				
+				<p>以上是正常情况，而下面将演示非正常情况，我将给前两个容器添加相偏移</p>
+<pre class="prettyprint lang-css">
+.a {background: yellow; top: 10px; left: 10px;}
+.b {background: blue; top: 10px; left: 10px;}
+</pre>	
+<div style="width: 200px; height: 40px; border: 1px solid black; position: relative;background: yellow;top: 20px; left: 20px;"></div>
+<div style="width: 200px; height: 40px; border: 1px solid black; position: relative;background: blue;top: 10px; left: 10px;"></div>
+<div style="width: 200px; height: 40px; border: 1px solid black;"></div>				
+				<p>注意到虽然前两个元素虽然发生了移动，但是第三个元素并没有收到影响，并且前两个元素的移动都是根据自己的相对位移。<strong>如果这三个盒子还存在外边距的话，那么外边距的折叠效果仍然是与标准流保持一致的。</strong></p>
 
 
 
