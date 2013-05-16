@@ -276,7 +276,7 @@ div { width: 200px; height: 40px; border: 1px solid black; position: relative; }
 }
 </pre>					
 				<p><strong>记住这样一个原则，在矛盾的情况下left的优先级要比right高，top的优先级要比bottom高，即使right书写在left后面。这一原则在绝对定位和相对于视窗定位时仍然成立。</strong></p>
-				<h3>Containing Block & Position: absolute</h3>
+				<h3>Position: absolute</h3>
 				<p>绝对定位与相对定位虽然只差一个字，但差别多了去了。首先绝对定位元素已经彻底脱离了标准流，有一种跳出三界外，不在五行中的感觉，所以它的偏移量不是相对于标准流进行偏移的，而是相对于<strong>距离它最近的position不为static的祖先元素</strong>。</p>
 				<p>什么是距离它最近的position不为static的祖先元素？看下面例子</p>
 <pre class="prettyprint lang-css">
@@ -331,7 +331,33 @@ div { border: 1px solid black; }
 				<p><strong>当行内元素形成多行并且左右侧不对齐时（形成了许多的line boxes），相对于它绝对定位的元素参考的区域是，以第一行inline box的左边和上边为边界（这里的边界是内容边界，content edge而非padding edge），和最后一行inline box的右边和下边为边界的矩形区域</strong>。即使中间有某几行的右侧与最后一行没有对齐，仍然以最后一行为准。所以有了上面的结果。</p>
 				<p>上面提到了一个edge概念，在盒子模型中有content edge，padding edge，border edge，margin edge。content edge内容边距指内容(content)与内边距(padding)的交界处，或者说包围内容区域的一圈边缘，另外三个同理。</p>
 				<p>于是这里我们不得不还要考虑一个问题：比如当我指定绝对定位的left偏移量时，这个量是从这个元素的哪一个边缘到相对元素的哪一个边缘？<strong>记住了，是从该元素的外边距边缘(margin edge)到相对元素的内边距边缘(padding edge)</strong>。也就是说在绝对定位中，外边距仍然是工作中的，BTW在相对定位中也是。</p>
-				<p>这里同时引入另一个概念，containing block，包容块</p>
+				<p>阿里巴巴UED有一篇文章是关于使用absolute的一个tip，可以加深对absolute的理解: <a href="http://www.aliued.cn/2012/12/30/overflowhidden%E7%9C%9F%E7%9A%84%E5%A4%B1%E6%95%88%E4%BA%86%E5%90%97.html">《overflow:hidden真的失效了吗》</a></p>
+				<p>Position: fixed</p>
+				<p>在W3C中把fixed视为absolute的一种情况，这个值可以一句话就带过了。绝对定位不是把某个祖先元素作为参考对象吗？那fixed也是把某个祖先元素视为参考对象，只不过这个参考对象是唯一的，那就是浏览器。注意，IE6中的position是没有fixed属性的</p>
+				<p>参考文章</p>
+				<ul>
+					<li><a target="_blank" href="http://www.charlescooke.me.uk/web/lab_notes/pos_abs/index.html">Absolute Positioning</a></li>
+					<li><a target="_blank" href="http://www.w3.org/TR/CSS2/visuren.html#absolute-positioning">absolute-positioning</a></li>
+					<li><a target="_blank" href="http://www.brainjar.com/css/positioning/default.asp">CSS Positioning</a></li>
+				</ul>
+				<h3><strong>Containing Block</strong></h3>
+				<p>大部分时候一个元素的尺寸和位置并非是由它自己决定的（比如当它没有硬性规定长宽的时候），而是要参考它所在的那个容器，或者是它需要参考的元素容器。这个容器就叫做containing block，包含块。</p>
+				<p>包含块(containing block)的定义是我觉得w3c文档中写的最通俗易懂的，大致谈了四点：</p>
+				<ul>
+					<li>根元素（我不理解为什么没有明确指出是body或html）的包含块被称为初始包含块(initial containing block)，这个包含块指的是浏览器视口(viewport)，就是浏览器的窗口大小。</li>
+					<li>对position为relative或static的元素来说，包含块指1.最近的;2.块级祖先元素；3.内容边缘(content edge) 所形成的区域</li>
+					<li>position为fixed的元素，包含块就是视口</li>
+					<li>如果元素是绝对定位，包含块除了要满足具有出static之外的定位属性意外，还要分一下两种情况:</li>
+					<li>
+						<ul>
+							<li>当满足情况的祖先元素是行内元素时，包含块应该是上一节绝对定位中最后描述的，行内元素多行时，当右侧参差不齐时形成区域的规则。在CSS2.1中，如果行内元素被分为许多行，那么包含块为undefined</li>
+							<li>如果不是行内元素，包含块即是那个祖先元素内边距边缘所形成的区域。</li>
+						</ul>
+					</li>
+					<li>最后，如果该元素都满足上述任何条件，那么包含块即是指“初始包含块”</li>
+				</ul>
+
+				
 
 
 
