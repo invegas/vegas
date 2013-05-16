@@ -260,7 +260,14 @@ div { width: 200px; height: 40px; border: 1px solid black; position: relative; }
 <div style="width: 200px; height: 40px; border: 1px solid black; position: relative;background: blue;top: 10px; left: 10px;"></div>
 <div style="width: 200px; height: 40px; border: 1px solid black;"></div>				
 				<p>注意到虽然前两个元素虽然发生了移动，但是第三个元素并没有收到影响，并且前两个元素的移动都是根据自己的相对位移。<strong>如果这三个盒子还存在外边距的话，那么外边距的折叠效果仍然是与标准流保持一致的。</strong></p>
-				<p>再留意上面的一个细节，这三个容器我都没有设置z-index，你也可以通过firebug之类的工具查看到它们的z-index的确是auto；但却出现了有叠加的情况；</p>
+				<p>再留意上面的一个细节，这三个容器我都没有设置z-index，你也可以通过firebug之类的工具查看到它们的z-index是auto；但却出现了有叠加的情况。</p>
+				<p><strong>元素z轴上的层叠关系不仅仅可以通过z-index这个属性来硬性规定。还可以根据浮动，负外边距，定位属性等隐式属性的隐士式体现。</strong>就上面的例子而言，当然是有position为relative的元素的优先级比static高，而同样都是relative，在代码中后书写的元素优先级又比先书写的优先级高。</p>
+				<p>z-index不在这次讲课之列，有兴趣的同学可以参考下列文章：</p>
+				<ul>
+					<li><a target="_blank" href="http://coding.smashingmagazine.com/2009/09/15/the-z-index-css-property-a-comprehensive-look/">The Z-Index CSS Property: A Comprehensive Look</a></li>
+					<li><a target="_blank" href="http://www.vanseodesign.com/css/css-stack-z-index/">Z-Index And The CSS Stack: Which Element Displays First?</a></li>
+					<li><a target="_blank" href=http://www.w3.org/TR/CSS21/zindex.html"">Appendix E. Elaborate description of Stacking Contexts</a></li>
+				</ul>
 				<p>留意一个边界情况，如果偏移量有矛盾怎么办，比如</p>
 <pre class="prettyprint lang-css">
 .a {
@@ -268,10 +275,63 @@ div { width: 200px; height: 40px; border: 1px solid black; position: relative; }
   right: 10px;
 }
 </pre>					
-				<p><strong>记住这样一个原则，在矛盾的情况下left的优先级要比right高，top的优先级要比bottom高，即使right书写在left后面。</strong></p>
+				<p><strong>记住这样一个原则，在矛盾的情况下left的优先级要比right高，top的优先级要比bottom高，即使right书写在left后面。这一原则在绝对定位和相对于视窗定位时仍然成立。</strong></p>
 				<h3>Containing Block & Position: absolute</h3>
-
-
+				<p>绝对定位与相对定位虽然只差一个字，但差别多了去了。首先绝对定位元素已经彻底脱离了标准流，有一种跳出三界外，不在五行中的感觉，所以它的偏移量不是相对于标准流进行偏移的，而是相对于<strong>距离它最近的position不为static的祖先元素</strong>。</p>
+				<p>什么是距离它最近的position不为static的祖先元素？看下面例子</p>
+<pre class="prettyprint lang-css">
+div { border: 1px solid black; }
+.outer { width: 120px; height: 120px; position: relative;}
+.inner { width: 80px; height: 80px; margin: 20px 0 0 20px;}
+.item { width: 50px; height: 50px; background: red; 
+	position: absolute; 
+	left: 0; 
+	top: 0;
+}
+</pre>	
+<pre class="prettyprint lang-html">
+&lt;div class="outer"&gt;
+    &lt;div class="inner"&gt;
+        &lt;div class="item"&gt;&lt;/div&gt;
+    &lt;/div&gt;
+&lt;/div&gt;
+</pre>
+<div style="width: 120px; height: 120px; position: relative;border: 1px solid black;">
+    <div style="width: 80px; height: 80px; margin: 20px 0 0 20px;border: 1px solid black;">
+        <div style="width: 50px; height: 50px; background: red; position: absolute; left: 0; top: 0;border: 1px solid black;"></div>
+    </div>
+</div>
+				<p>红色方块有两个父元素，为什么它绝对定位到离他更远的父元素？因为它的祖父元素（离它更远的那位）的position属性不为static，而它的父元素为static。如果想让它相对于父元素绝对定位怎么办，那就给父元素设置position不为static就行。</p>
+<pre class="prettyprint lang-css">
+.inner { width: 80px; height: 80px; margin: 20px 0 0 20px; position:relative;}
+</pre>	
+<div style="width: 120px; height: 120px; position: relative;border: 1px solid black;">
+    <div style="width: 80px; height: 80px; margin: 20px 0 0 20px;border: 1px solid black;position: relative;">
+        <div style="width: 50px; height: 50px; background: red; position: absolute; left: 0; top: 0;border: 1px solid black;"></div>
+    </div>
+</div>
+				<p>再次强调，绝对定位就是相对于<strong>1.离它最近的父元素;2.并且这个最近父元素position值为非static。</strong>。如果元素所有的祖先元素都是static怎么办？那就相对于浏览器窗口了。</p>
+				<p>还有一个在w3c中特别注明的情况，如果父元素是行内元素怎么办？行内元素不可怕，可怕的是这个行内元素还形成了多行。看下面这个例子：</p>
+<pre class="prettyprint lang-css">
+.wrap { position:relative; border: 10px solid black; padding: 10px;line-height: 65px; }
+.item { background: blue; position: absolute; right: 5px;bottom: 5px;} 
+</pre>	
+<pre class="prettyprint lang-html">
+&lt;span class="wrap"&gt;
+    test test test test test test test test test test test test test test test test test test test test test test test test test test test
+    &lt;span class="item"&gt;This is span&lt;/span&gt;
+&lt;/span&gt;
+</pre>
+<span style="position:relative; border: 10px solid black; padding: 10px;line-height: 65px; ">
+    test test test test test test test test test test test test test test test test test test test test test test test test test test test
+    <span style="background: blue; position: absolute; right: 5px;bottom: 5px;">This is span</span>
+</span>				
+				<p>我让另一个蓝色行内元素相对于它父元素（同样也是行内元素）进行绝对定位，定位在右下角。</p>
+				<p>注意此时多行元素的“右”是有两个不同的值，一个是第一行的右，一个是第二行的右，并且第二行的右比第一行的右还要短，那此时相对的“右”应该是哪一个右？如图所示，当然是最后一行的。</p>
+				<p><strong>当行内元素形成多行并且左右侧不对齐时（形成了许多的line boxes），相对于它绝对定位的元素参考的区域是，以第一行inline box的左边和上边为边界（这里的边界是内容边界，content edge而非padding edge），和最后一行inline box的右边和下边为边界的矩形区域</strong>。即使中间有某几行的右侧与最后一行没有对齐，仍然以最后一行为准。所以有了上面的结果。</p>
+				<p>上面提到了一个edge概念，在盒子模型中有content edge，padding edge，border edge，margin edge。content edge内容边距指内容(content)与内边距(padding)的交界处，或者说包围内容区域的一圈边缘，另外三个同理。</p>
+				<p>于是这里我们不得不还要考虑一个问题：比如当我指定绝对定位的left偏移量时，这个量是从这个元素的哪一个边缘到相对元素的哪一个边缘？<strong>记住了，是从该元素的外边距边缘(margin edge)到相对元素的内边距边缘(padding edge)</strong>。也就是说在绝对定位中，外边距仍然是工作中的，BTW在相对定位中也是。</p>
+				<p>这里同时引入另一个概念，containing block，包容块</p>
 
 
 
