@@ -81,7 +81,7 @@ app.get('/', function (req, res) {
 		})
 	}
 
-	mongo.showBlogList(res, renderBlogList);
+	mongo.showBlogList(req, res, renderBlogList);
 })
 //index
 app.get('/blog', function (req, res) {
@@ -98,7 +98,7 @@ app.get('/blog', function (req, res) {
 		})
 	}
 
-	mongo.showBlogList(res, renderBlogList);
+	mongo.showBlogList(req, res, renderBlogList);
 });
 //login
 app.get("/login", function (req, res) {
@@ -203,7 +203,7 @@ app.get('/admin', checkAccess, function (req, res) {
 		})
 	}
 
-	mongo.showBlogList(res, renderBlogList);
+	mongo.showBlogList(req, res, renderBlogList);
 })
 //add
 app.get('/admin/blog/add', checkAccess, function (req, res) {

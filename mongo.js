@@ -11,6 +11,8 @@ var connectToDB = function (callback) {
 	});	
 }
 
+var SKIP_NUM = 10, LIMIT_NUM = 10;
+
 //blog
 var Blog = {};
 var blogSchema = {};
@@ -101,21 +103,24 @@ var initBlog = function () {
 	initUser();
 }
 
-var showBlogList = function (res, callback) {
+var showBlogList = function (req, res, callback) {
 	// Blog.find({}, function (err, doc) {
 	// 	if (!err) {
 	// 		callback(res, doc);
 	// 	}
 	// })	
+	var page = req.query.page? (req.query.page - 1): 0;
 
+	if (page < 0) res.redirect('/error');
+	
 	Blog.find({}).sort({ 
 		date: -1 
-	}).exec(function (err, doc) {
+	}).skip(SKIP_NUM * page).limit(LIMIT_NUM).exec(function (err, doc) {
 		if (!err) {
 			callback(res, doc);
 		}
-	})
-}
+	}
+)}
 var showBlogListByCate = function (req, res, callback) {
 	var key = req.params.key;
 	// Blog.find({"category": key}, function (err, doc) {
