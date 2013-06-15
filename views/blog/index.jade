@@ -23,6 +23,25 @@ html
        div.blog
         p 抱歉 此分类下暂时没有任何文章
       - }
+      div.pagination.pagination-small.pagination-centered
+       ul
+        - if (cur != 1) {
+          li
+            a(href="/blog?page=#{cur - 1}") «
+        - }
+        - for (var i = 1; i <= total; i++) {
+          - if ( i == cur) {
+           li.active
+            a #{i}
+          - } else {
+           li
+            a(href="/blog?page=#{i}") #{i}
+          - }
+        - }
+        - if (total != cur) {
+           li
+            a(href="/blog?page=#{cur + 1}") »
+        - } 
      div.span4
       include component/panel
      div.span1

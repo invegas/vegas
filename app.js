@@ -85,11 +85,13 @@ app.get('/', function (req, res) {
 })
 //index
 app.get('/blog', function (req, res) {
-	var renderBlogList = function (res, blogs) {
+	var renderBlogList = function (res, data) {
 		res.render("blog/index", {
 			'title': ' 轻薄',
-			'blogs': blogs,
+			'blogs': data.blogs,
 			'req': req,
+			'total': data.total,
+			'cur': data.cur,
 			'method': {
 				sliceContent: helper.sliceContent,
 				outputDate: helper.outputDate,
@@ -167,7 +169,7 @@ app.get('/blog/:title', function (req, res) {
 	var renderBlog = function (res, data) {
 		res.render("blog/blog", {
 			'blog': data.one,
-			'blogs': data.all,
+			// 'blogs': data.all,
 			'req': req,
 			'router': req.params,
 			'method': {
@@ -284,7 +286,7 @@ app.get('/admin/blog/:title/:action?/:status?/:reason?', checkAccess, function (
 		res.render("blog/blog", {
 			"title": "编辑",
 			'blog': data.one,
-			'blogs': data.all,
+			// 'blogs': data.all,
 			'req': req,
 			'router': req.params,
 			'method': {

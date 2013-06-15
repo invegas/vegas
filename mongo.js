@@ -103,12 +103,14 @@ var initBlog = function () {
 	initUser();
 }
 
+var computePage = function (callback) {
+	Blog.find().count().exec(function (err, doc) {
+		console.log("play count:", doc);
+	})
+}
+
 var showBlogList = function (req, res, callback) {
-	// Blog.find({}, function (err, doc) {
-	// 	if (!err) {
-	// 		callback(res, doc);
-	// 	}
-	// })	
+
 	var page = req.query.page? (req.query.page - 1): 0;
 
 	if (page < 0) res.redirect('/error');
@@ -116,11 +118,35 @@ var showBlogList = function (req, res, callback) {
 	Blog.find({}).sort({ 
 		date: -1 
 	}).skip(SKIP_NUM * page).limit(LIMIT_NUM).exec(function (err, doc) {
-		if (!err) {
-			callback(res, doc);
-		}
+
+		if (err) return;
+		// 查找页数
+		Blog.find().count().exec(function (err, count) {
+			var total = parseInt(count / LIMIT_NUM, 10) + 1;
+			var data = {
+				cur: page + 1,
+				total: total,
+				blogs: doc
+			}
+			// console.log(data.cur, data.total);
+			callback(res, data);
+		})
+
+
+		// 查找页数
+		// Blog.find({}, function (err, all) {
+		// 	var total = parseInt(all.length / LIMIT_NUM, 10) + 1;
+		// 	var data = {
+		// 		cur: page + 1,
+		// 		total: total,
+		// 		blogs: doc
+		// 	}
+		// 	// console.log(data.cur, data.total);
+		// 	callback(res, data);
+		// })
 	}
 )}
+
 var showBlogListByCate = function (req, res, callback) {
 	var key = req.params.key;
 	// Blog.find({"category": key}, function (err, doc) {
@@ -173,15 +199,12 @@ var findBlog = function (title, res, callback) {
 	Blog.findOne({
 		'title': title
 	}, function (err, one) {
-		Blog.find({}, function (err, all) {
-			if (!err) {
-				var obj = {
-					one: one,
-					all: all
-				}
-				callback(res, obj);
+		if (!err) {
+			var obj = {
+				one: one
 			}
-		})			
+			callback(res, obj);
+		}
 	})
 }
 

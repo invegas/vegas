@@ -1,12 +1,3 @@
-div.link
- ul
-  - if (blogs.length != 0) {
-  -  for (var i in blogs) { 
-     li
-      a(href="/blog/#{blogs[i].title}") #{blogs[i].title}
-  -  }
-  - }
-
 - var nav = method.activeNav(req.originalUrl);
 div.secondary-nav(data-spy="affix", data-offset-top="260")
  ul.nav.nav-list
