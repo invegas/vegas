@@ -68,11 +68,13 @@ mongo.connectToDB(mongo.initBlog);
 //router
 //index
 app.get('/', function (req, res) {
-	var renderBlogList = function (res, blogs) {
+	var renderBlogList = function (res, data) {
 		res.render("blog/index", {
 			'title': ' 轻薄',
-			'blogs': blogs,
+			'blogs': data.blogs,
 			'req': req,
+			'total': data.total,
+			'cur': data.cur,
 			'method': {
 				sliceContent: helper.sliceContent,
 				outputDate: helper.outputDate,
