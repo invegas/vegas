@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>你真的了解setTimeout和setInterval吗？</title>
+	<link rel="stylesheet" type="text/css" href="css/bootstrap.css">
+	<link rel="stylesheet" type="text/css" href="prettify/sunburst.css">
+	<script type="text/javascript" src="prettify/prettify.js"></script>	
+	<style type="text/css">
+		body {
+			font-family: '微软雅黑';
+		}
+		blockquote p{
+			font-style: italic;
+			font-size: 12px;
+		}
+	</style>
+</head>
+<body onload="prettyPrint()">
+	<div class="container">
+		<div class="row">
+			<div class="span1"></div>
+			<div class="span6">
+				<h3>你真的了解setTimeout和setInterval吗？</h3>
+			</div>
+			<div class="span4"></div>
+			<div class="span1"></div>
+		</div>		
+		<div class="row">
+			<div class="span1"></div>
+			<div class="span6">
+				<p>setTimeout和setInterval的基本用法我们不谈，无非是1.指定延迟后调用函数，2.以指定周期调用函数</p>
+				<p>让我们想象一个意外情况，比如说下面的setInterval</p>
+<pre class="prettyprint lang-javascript">
+setInterval(function () {
+	func(i++);
+}, 100)
+</pre>
+				<p>我们以每100毫秒调用一次func函数，如果func的执行时间少于100毫秒的话好办，在遇到下一个100毫秒前就能够执行完：</p>
+				<img src="http://javascript.info/files/tutorial/advanced/timing/interval1.png">
+				<p>但如果func的执行时间大于100毫秒，该触发下一个func函数时之前的还没有执行完怎么办？（前提是你要知道javascript只有单线程，不存在同时执行致命一说，才会有这个问题）。答案如下图所示，那么第二个func会在队列（这里的队列是指event loop，在下文中会详细提到）中等待，直到第一个函数执行完</p>
+				<img src="http://javascript.info/files/tutorial/advanced/timing/interval3.png">
+				<p>如果第一个函数的执行时间特别长，在执行的过程中本应触发了许多个func怎么办，那么所有这些应该触发的函数都会进入队列吗？</p>
+				<p><strong>不，只要发现队列中有一个被执行的函数存在，那么其他的统统忽略。</strong>如下图，在第300毫秒和400毫秒处的回调都被抛弃，一旦第一个函数执行完后，接着执行队列中的第二个，即使这个函数已经过时很久了。</p>
+				<img src="http://javascript.info/files/tutorial/advanced/timing/interval4.png">
+
+			
+
+
+
+
+
+
+			</div>
+			<div class="span4"></div>
+			<div class="span1"></div>
+		</div>
+	</div>
+	<script type="text/javascript" src="js/bootstrap.js"></script>
+</body>
+</html>
