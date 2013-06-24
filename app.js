@@ -207,7 +207,7 @@ app.get('/admin', checkAccess, function (req, res) {
 		})
 	}
 
-	mongo.showBlogList(req, res, renderBlogList);
+	mongo.showAdminBlogList(req, res, renderBlogList);
 })
 //add
 app.get('/admin/blog/add', checkAccess, function (req, res) {

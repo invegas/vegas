@@ -109,6 +109,16 @@ var computePage = function (callback) {
 	})
 }
 
+var showAdminBlogList = function (req, res, callback) {
+	Blog.find({}).sort({ 
+		date: -1 
+	}).exec(function (err, doc) {
+		if (!err) {
+			callback(res, doc);
+		}
+	})
+}
+
 var showBlogList = function (req, res, callback) {
 
 	var page = req.query.page? (req.query.page - 1): 0;
@@ -227,6 +237,7 @@ var updateBlogById = function (req, res, callback) {
 exports.connectToDB = connectToDB;
 exports.initBlog = initBlog;
 exports.showBlogList = showBlogList;
+exports.showAdminBlogList = showAdminBlogList;
 exports.showBlogListByCate = showBlogListByCate;
 
 exports.saveBlog = saveBlog;

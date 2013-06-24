@@ -76,7 +76,7 @@ setInterval(function() {
 </pre>
                 <p>先弹出的应该是1，而不是你以为“立即执行”的2。</p>
                 <p>setTimeout，setInterval都存在一个最小延迟的问题，虽然你给的delay值为0，但是浏览器执行的是自己的最小值。HTML5标准是4ms，但并不意味着所有浏览器都会遵循这个标准，包括手机浏览器在内，这个最小值既有可能小于4ms也有可能大于4ms。在标准中，如果在setTimeout中嵌套一个setTimeout, 那么嵌套的setTimeout的最小延迟为10ms。</p>
-                <p><strong>下面我们聊聊setTimeou和线程的一些关系</strong></p>
+                <p><strong>下面我们聊聊setTimeout和线程的一些关系</strong></p>
                 <p>现在我有一个非常耗时的操作（如下面的代码，在table中插入2000行），我想计算这个操作所耗的时间应该怎么办？你觉得下面这个用<code>new Date</code>来计算的方法怎么样：</p>
 <pre class="prettyprint lang-javascript">
 var t1 = +new Date();
@@ -129,7 +129,61 @@ function run() {
   }
 }
 </pre>              
-            <p><strong>setInterval有一个很重要的应用是javascript中的动画</strong>。这种情况下通常会有多个计时器同时运行，如果同时大量计时器同时运行的话，会引起一些个问题，比如如何回收这些计时器？jquery的作者John Resig建议建立一个管理中心，它给出的一个非常简单的代码如下：</p>
+            <p><strong>setInterval有一个很重要的应用是javascript中的动画</strong></p>
+            <p>举个例子，假设我们有一个正方形div，宽度为100px, 现在想让它的宽度在1000毫秒内增加到300px——很简单，算出每毫秒内应该增加的像素，再按每毫秒为周期调用setInterval增长</p>
+<pre class="prettyprint lang-javascript">
+var div = $('div')[0];
+var width = parseInt(div.style.width, 10);
+
+var MAX = 300, duration = 1000;
+var inc = parseFloat( (MAX - width) / duration );
+
+function animate (id) {
+    width += inc;
+    if (width >= MAX) {
+        clearInterval(id);
+        console.timeEnd("animate");
+    }
+    div.style.width = width + "px";
+}
+
+console.time("animate");
+var timer = setInterval(function () {
+    animate(timer);
+}, 0)
+</pre>          
+            <p>代码中利用<code>console.time</code>来计算时间所花费的时间——实际上花的时间是明显大于1000毫秒的，为什么？因为上面说到最小周期至少应该是4ms，所以每个周期的增长量应该是没每毫秒再乘以四</p>    
+<pre class="prettyprint lang-javascript">
+var inc = parseFloat( (MAX - width) / duration ) * 4;
+</pre>            
+            <p>如果你有心查看jquery的动画源码的话，你能发现源码的时间周期是13ms，这是我不解的地方——如果最求流畅的动画效果来说，每秒（1000毫秒）应该是60帧，这样算下来每帧的时间应该是16.7毫秒，在这里我把每帧定义为完成一个像素增量所花的时间，也就是16毫秒（毫秒不允许存在小数）是让动画流畅的最佳值。哪位朋友可以告诉jquery的13这个值是如何来的？</p>
+            <p>无论你如何优化setInterval，误差是始终存在的。但其实在HTML5中，有一个实践动画的最佳途径<code>requestAnimationFrame</code>。这个函数能保证能以每帧来执行动画函数。比如上面的例子就可以改写为：</p>
+<pre class="prettyprint lang-javascript">
+//init some values
+var div = $('div')[0].style;
+var height = parseInt(div.height, 10);
+var seconds = 1;
+
+//calc distance we need to move per frame over a time
+var max = 300;
+var steps = (max- height) / seconds / 16.7;
+
+//16.7ms is approx one frame (1000/60)
+
+//loop
+function animate (id) {
+    height += steps; //use calculated steps
+    div.height = height + "px";
+
+    if (height < max) {
+        requestAnimationFrame(animate);
+    }
+}
+
+animate();
+</pre> 
+            <p>关于这个函数和它对应的cancel函数，或者是polyfill就不在这延伸了，有兴趣的同学可以自己查找资料了解。</p>
+            <p>这种情况下通常会有多个计时器同时运行，如果同时大量计时器同时运行的话，会引起一些个问题，比如如何回收这些计时器？jquery的作者John Resig建议建立一个管理中心，它给出的一个非常简单的代码如下：</p>
 <pre class="prettyprint lang-javascript">
 var timers = {                               
   timerID: 0,                                           
@@ -190,7 +244,29 @@ jQuery.fx.start = function() {
     }
 };
 </pre>                              
-            <p>不解释，和上面的那段已经非常类似了，有兴趣的同学可以阅读整段effect.js代码。</p>
+            <p>不解释，和上面的那段已经非常类似了，有兴趣的同学可以在github上阅读整段effect.js代码。</p>
+            <p>最后setTimeout的应用就是总所周知的，来处理因为js处理时间过长造成浏览器假死的问题了。这个技术在《JavaScript高级程序设计》中已经阐述过了（没有谁没有读过这本书吧）。简单来说，如果你的循环1.每一次处理不依赖上一次的处理结果；2.没有执行的先后顺序之分；3.（呃，忘了）。因为手头上暂时找不到这本书，在网上找了一段类似的代码作为抛砖引玉作为结尾吧，有兴趣的同学可以去回顾这段：</p>
+<pre class="prettyprint lang-javascript">
+function chunk(array, process, context) {
+     setTimeout(function() {
+     var item = array.shift();
+     process.call(context, item);
+    if (array.length > 0) {
+          setTimeout(arguments.callee, 100);
+    }), 100);
+}
+</pre>
+        <p>chunk()函数的用途就是将一个数组分成小块处理，它接受三个参数：要处理的数组，处理函数以及可选的上下文环境。每次函数都会将数组中第一个对象取出交给process函数处理，如果数组中还有对象没有被处理则启动下一个timer，直到数组处理完。这样可保证脚本不会长时间占用处理机，使浏览器出一个高响应的流畅状态。</p>
+        <p>参考资料:</p>
+        <ul>
+            <li><a target="_blank" href="http://javascript.info/tutorial/settimeout-setinterval">Understanding timers: setTimeout and setInterval</a></li>
+            <li><a target="_blank" href="http://javascript.info/tutorial/events-and-timing-depth">Events and timing in-depth</a></li>
+            <li><a target="_blank" href="http://ejohn.org/blog/how-javascript-timers-work/">How JavaScript Timers Work</a></li>
+            <li><a target="_blank" href="http://www.dewen.org/q/2164">如何防止由于脚本引起的浏览器假死</a></li>
+            <li><a target="_blank" href="https://developer.mozilla.org/en-US/docs/Web/API/window.setTimeout#Minimum.2F_maximum_delay_and_timeout_nesting">window.setTimeout</a></li>
+            <li><a target="_blank" href="http://hi.baidu.com/isabella_qi/item/766061fd5ac1a0d7a835a2b4">js线程机制</a></li>
+            <li><a target="_blank" href="http://stackoverflow.com/questions/17143007/confuse-about-using-javascript-setinterval-to-do-animate-job">Confuse about using javascript setInterval to do animate job</a></li>
+        </ul>
 
 
 
