@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Javascript: 从prototype漫谈到继承(2)</title>
+	<link rel="stylesheet" type="text/css" href="css/bootstrap.css">
+	<link rel="stylesheet" type="text/css" href="prettify/sunburst.css">
+	<script type="text/javascript" src="prettify/prettify.js"></script>	
+	<style type="text/css">
+		body {
+			font-family: '微软雅黑';
+		}
+		blockquote p{
+			font-style: italic;
+			font-size: 12px;
+		}
+	</style>
+</head>
+<body onload="prettyPrint()">
+	<div class="container">
+		<div class="row">
+			<div class="span1"></div>
+			<div class="span6">
+				<h3>Javascript: 从prototype漫谈到继承(2)</h3>
+			</div>
+			<div class="span4"></div>
+			<div class="span1"></div>
+		</div>		
+		<div class="row">
+			<div class="span1"></div>
+			<div class="span6">
+
+
+
+
+			<p>上一篇漫谈继承的结尾我们得出了第一个比较完美的解决方案:</p>
+<pre class="prettyprint lang-javascript">
+function extend(Child, Parent) {
+  var F = function(){};
+  F.prototype = Parent.prototype;
+  Child.prototype = new F();
+  // 一旦重置了函数的prototype，需要重新赋值prototype.constructor，
+  // 忽略这方面的介绍
+  Child.prototype.constructor = Child;
+  // 保留对父类的引用，
+  // 忽略对这方面的介绍
+  Child.uber = Parent.prototype;
+}
+</pre>	
+			<p>这个方法的“比较完美”之处就在于引入了一个中间变量<code>var F = function(){}</code>。因为如果直接让子类的prototype直接继承自父类的话<code>Child.prototype = Parent.prototype;</code>，出于是浅拷贝，可能对子类prototype某个属性的修改会影响到父类。而是用了一个中间变量则能避免这样的情况发生，具体请参看上一篇<a href="http://qingbob.com/blog/Javascript:%20%E4%BB%8Eprototype%E6%BC%AB%E8%B0%88%E5%88%B0%E7%BB%A7%E6%89%BF(1)">《Javascript: 从prototype漫谈到继承(1)》</a></p>
+
+			<p>再让我们换一种思路，继承的本质是把自己能子类能访问父类的属性和方法，那么也可以one by one的把父类的属性全部拷贝过来，像</p>
+<pre class="prettyprint lang-javascript">
+function extend2(Child, Parent) {
+  var p = Parent.prototype;
+  var c = Child.prototype;
+  for (var i in p) {
+     c[i] = p[i];
+  }
+  c.uber = p;
+}
+</pre>				
+			<p>这个方法的不是那么的优雅，因为明明是可以引用父类的属性结果又都拷贝了一份。但是尽可能的减少了引用，减少了查找的次数。</p>
+			<p>从开始谈继承到现在我们的聊的都是类与类，或者说构造函数与构造函数之间的继承，但这里是javascript，我们还需要考虑已经实例化了的对象之间的继承，把上面的extend2稍稍改造一下就是了</p>
+
+<pre class="prettyprint lang-javascript">
+function extendCopy(p) {
+  var c = {};  
+  for (var i in p) {
+     c[i] = p[i];
+  }
+  c.uber = p;
+  return c;
+}
+</pre>		
+		<p>在使用这个方法的时候，传入的参数就不在是一个构造函数，而是一个实实在在的对象。这是jquery的<code>$.extend</code>继承方法最基本的思想</p>
+		<br>
+		<p>上面的方法，或者说以上的所有方法，都没有解决一个深浅拷贝的问题。以上的所有方法使用的都是浅拷贝(shallow copy)，你拷贝的仅仅是指向原对象内存地址的指针而已，如果你修改子类继承自父类的某个属性，很可能父类的某个属性也被修改了。比如：</p>
+
+<pre class="prettyprint lang-javascript">
+var c = {};
+var p = {
+	pro: [1, 2, 3]
+}
+
+c.pro = p.pro
+c.pro.push(4)
+
+console.log(p.pro) //[1,2,3,4]
+</pre>	
+		<p>在上面的例子中c的pro属性继承自p.pro，pro是一个数组类型，但是当你修改c.pro时，p的pro也被修改了，这就是浅拷贝的危害！除去5种基本数据类型(Number, String, Boolean, Null, Undefined)以外的数据类型的拷贝都会是浅拷贝，但是这种危险还是要依据对子类属性的操作方式而定。比如当子类继承自父类的某个属性时object对象：</p>
+
+<pre class="prettyprint lang-javascript">
+var c = {};
+var p = {
+	name: "lee"
+}
+
+c = p;
+c = "kill"
+
+console.log(p) 
+</pre>	
+	<p>如果你把整个属性重新赋值，父类属性是不会被修改的。其中的原理是，继承的时候你是子类和父类该属性的指针都指向同一内存区域，这样的修改只是修改了子类该属性的指针，指向另一块地方去了，但是你按下面的方式修改就有问题了</p>
+<pre class="prettyprint lang-javascript">
+var c = {};
+var p = {
+	name: "lee"
+}
+
+c = p;
+c.name = "wang"
+
+console.log(p)  // wang
+</pre>
+	<p>没错，这种情况下父类也被修改了，因为此时子类和父类的该属性还在用同一块内存区域。</p>
+	<p>解决这个问题的方法也很简单，当我们沿用上面<code>extendCopy</code>方法，但是在拷贝每一个属性时，我们都去检查它是否需要深拷贝，如果需要，则进行深拷贝，这就是jquery的方法，只不过它做了更多更严密的判断，比如判断object类型和array类型的时候:</p>
+<pre class="prettyprint lang-javascript">
+function deepCopy(p, c) {
+  var c = c || {}; 
+  for (var i in p) {
+     if (typeof p[i] === 'object') {
+      c[i] = (p[i].constructor === Array) ? [] : {};
+      deepCopy(p[i], c[i]);
+     } else {
+      c[i] = p[i];
+     } 
+  }
+  return c;
+}
+</pre>
+	<br>
+	<p>在实战中我们除了继承外还想再生产这个对象的时候添加一些自己的属性，那么我们就可以同时用到prototype继承和一对一的拷贝属性</p>
+<pre class="prettyprint lang-javascript">
+function objectPlus(o, stuff) {
+  var n;
+  function F() {}
+  F.prototype = o;
+  n = new F(); 
+  // 继承父类属性完毕
+  n.uber = o;
+  // 继承自定义属性
+  for (var i in stuff) {
+     n[i] = stuff[i];
+  }
+  return n;
+}
+</pre>
+	<p>最后来看看大神道格拉斯的(Douglas Crockford)提出的解决方案。</p>
+	<p>首先他提出了一个<code>Object()</code>方法：</p>
+<pre class="prettyprint lang-javascript">
+function object(o) {
+  function F() {}
+  F.prototype = o;
+  return new F();
+}
+</pre>	
+	<p>其实这个方法与我们的第一个，本文开头的extend方法类似，只不过我们的方法指定了要继承的子类</p>
+	<p>假设我们有一个<code>var twoD = {name: "2d shape"}</code>需要被继承，利用object他的解决方法是</p>
+	<ol>
+		<li>利用object方法，把twoD克隆至一个that对象中，</li>
+		<li>给that对象添加自己的属性</li>
+		<li>返回that</li>
+	</ol>
+<pre class="prettyprint lang-javascript">
+function triangle(s, h) {
+  var that = object(twoD);
+  that.name ='Triangle';
+  that.getArea = function(){return this.side * this.height / 2;};
+  that.side = s;
+  that.height = h;
+  return that;
+}
+</pre>
+	<p>留意到triangle只是一个普通的函数，而不是一个构造函数，传入的参数是你自定义化的值</p>
+	<br>
+	<p>基本上介绍完了，其实还一个借用构造函数来实现继承的方法，但个人觉得，在上面那么多方法的衬托下，这个方法显得不清晰，比较晦涩一些，上面方法以及足够用了。就不予介绍了。</p>
+	<p>最后本来想贴一段jquery的extend源码让你们好好感受一下的，但是代码有点长有点宽，有兴趣的同学可以去github的jquery源码里瞧瞧，在<code>/src/core.js</code>文件中</p>
+	<br>
+	<p>最后吐槽一句，其实继承的本质我们是希望能实现以下功能</p>
+	<ul>
+		<li>父类有的我都有，我也能重载，但不至于影响到父类的属性和方法</li>
+		<li>除了继承之外，我也能添加自己的方法和属性</li>
+	</ul>
+	<p>能做到以上两点，夫复何求呢！介绍了这么多方法，只是那你有一个了解，都不是完美的，你完全可以都参考一遍然后组合一个适合自己业务逻辑的。行动吧骚年！</p>
+
+
+
+
+			</div>
+			<div class="span4"></div>
+			<div class="span1"></div>
+		</div>
+	</div>
+	<script type="text/javascript" src="js/bootstrap.js"></script>
+</body>
+</html>
