@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>谈javascript变量声明</title>
+	<link rel="stylesheet" type="text/css" href="css/bootstrap.css">
+	<link rel="stylesheet" type="text/css" href="prettify/sunburst.css">
+	<script type="text/javascript" src="prettify/prettify.js"></script>	
+	<style type="text/css">
+		body {
+			font-family: '微软雅黑';
+		}
+		blockquote p{
+			font-style: italic;
+			font-size: 12px;
+		}
+	</style>
+</head>
+<body onload="prettyPrint()">
+	<div class="container">
+		<div class="row">
+			<div class="span1"></div>
+			<div class="span6">
+				<h3>Javascript: 你真的了解函数声明吗？</h3>
+			</div>
+			<div class="span4"></div>
+			<div class="span1"></div>
+		</div>		
+		<div class="row">
+			<div class="span1"></div>
+			<div class="span6">
+
+
+
+
+			<p>有感于，我们每天用各种的编辑器，嘴里喊着utf-8，BOM头，gbk，encode，decode，却鲜有人知道它们的由来和为什么这样做（好吧，也有可能就我一个人不知道）。最近找了很多资料，在这里做一个整理，和大家分享。</p>
+			<strong>关于Unicode,UTF8,Character Sets的前生今世</strong>
+			<strong>ASC II</strong>
+			<p>Long long time age, 总所周知电脑只能处理数字而不能处理字符，所以把哪些字符由哪些数字表示统一起来（而不是每台电脑有每台电脑的标准）非常重要。</p>
+			<p>比如说我的电脑用1表示A，2表示B，3表示C，诸如此类。而你的电脑用0表示A，1表示B，2表示C等等。那么当我发送给你一条内容为“HELLO”的消息时，数字8,5,12,12,15就通过光缆传输到了你那，但因为数字表示的字符不同，当你收到这串数字时，你会把它翻译(<strong>decode</strong>)成“IFMMP”。为了有效的交流，我们必须对如何编码(encoding)这些字符达成一致。</p>
+			<p>终于，在十九世纪60年代，美国标准协会(American Standards Association)发明了7位(7-bit)编码方式，称为美国信息交换标准码(American Standard Code for Information Interchange)，就是我们熟知的<strong>ASCII</strong>。在这种编码标准下，HELLO表示的数字是72,69,76,76,79，并且会以二进制1001000 1000101 1001100 1001100 1001111的形式进行传输。7位编码一共提供了128种可能，从0000000到1111111。那时所有的拉丁字符
+			的大小写，通用的标点，缩进，空格和其它一些控制符都能在ASCII中有一席之地。在1968年，美国总统Lyndon Johnson宣布所有的电脑必须使用和能读懂ASCII标准，ASCII成为官方标准。</p>
+			<strong>8-bit</strong>
+			<p>电报一类的工具当然乐于使用七位编码去传输信息，但是到了七十年代，电脑的处理器更乐意与2的次方打交道——他们已经可以用8位来存储字符，也就是说这将提供256种可能。</p>
+			<p>一个8位字符被存储的数字最大是255，但是ASCII标准最大只到127。这就意味着从128到255被空了出来。IBM用这些多余的数字来存储一些形状，希腊字母。比如200代表一个盒子的左下角╚，244代表小写的希腊字母<strong>α</strong>。时</p>
+			
+
+
+
+
+
+
+			</div>
+			<div class="span4"></div>
+			<div class="span1"></div>
+		</div>
+	</div>
+	<script type="text/javascript" src="js/bootstrap.js"></script>
+</body>
+</html>
