@@ -180,6 +180,82 @@ str = u"测试"
 </pre>      
             <br>
             <p>其实Unicode还有很多地方可以聊，比如UTF-16 LE与UTF-16 BE，也就是big endian和little endian等等。但这就要开始牵扯更深，比如CPU，进制转换等，这些就不是我所擅长的范围了。在文章最后悔会给出一些文章链接，有兴趣的同学可以继续深入研究。</p>
+            <h5>URL encoding</h5>
+            <p>在谈URL encode之前，先要了解一下URL的语法。</p>
+            <p>你可能会觉得奇怪URL还有语法？有当然有。</p>
+            <p>一般我们接触的网页URL比如像<code>http://qingbob.com</code>，语法（以下的翻译可能不准确）非常简单：</p>
+            <table class="table table-striped">
+                <tbody>
+                    <tr>
+                        <td>协议(Scheme)</td>
+                        <td>http</td>
+                    </tr>
+                    <tr>
+                        <td>主机地址(Host address)</td>
+                        <td>qingbob.com</td>
+                    </tr>
+                </tbody>
+            </table>
+            <p>但一个包含了完整语法的URL应该是这个样子的：</p>
+<pre class="prettyprint lang-html">
+https://bob:bobby@qingbob.com:8080/file;p=1?q=2#third
+</pre>                  
+            <p>对应的语法应该是</p>            
+            <table class="table table-striped">
+                <tbody>
+                    <tr>
+                        <td>协议(Scheme)</td>
+                        <td>https</td>
+                    </tr>
+                    <tr>
+                        <td>用户(User)</td>
+                        <td>bob</td>
+                    </tr>
+                    <tr>
+                        <td>密码(Password)</td>
+                        <td>bobby</td>
+                    </tr>
+                    <tr>
+                        <td>主机地址(Host address)</td>
+                        <td>qingbob.com</td>
+                    </tr>
+                    <tr>
+                        <td>端口(Port)</td>
+                        <td>8080</td>
+                    </tr>
+                    <tr>
+                        <td>路径(Path)</td>
+                        <td>/file</td>
+                    </tr>
+                    <tr>
+                        <td>路径参数(Path parameters)</td>
+                        <td>p=1</td>
+                    </tr>
+                    <tr>
+                        <td>查询参数(Query parameters)</td>
+                        <td>q=2</td>
+                    </tr>
+                        <td>片段(Fragment)</td>
+                        <td>third</td>
+                    </tr>   
+                </tbody>
+            </table>
+            <p>更详细的图解可以参考<a href="http://en.wikipedia.org/wiki/URI_scheme#Examples" target="_blank"></a>维基百科</p> 
+            <p>看过了上面的语法，你大概已经回忆起十之八九，单个部分就不详解了，直接进入URL语法。</p>   
+            <p>URL语法定义了如何把URL的各个部分组装起来，以及如何把他们区分开来。比如<code>://</code>符号就是把协议与主机名区分开；主机名与路径用<code>/</code>区分开；查询参数只能跟在<code>?</code>之后。这也就意味着有一些符号作为保留字为语法服务。可能有的符号在整个URL中都作为保留字，有的只是在某个部分作为保留字。<strong>一旦某个保留字在它不应该出现的地方出现了（比如在文件名中出现了一个<code>?</code>）。这个字符就需要被编码(encode)。</strong></p>
+            <p>URL编码就是把一个字符转变成另一种对URL无损的表现形式，并且让它失去URL语法含义。通过字符编码(character encoding)把这个字符转化为十六进制，并且以百分号%开头，比如一个问号经过URL编码之后就是<code>%3F</code>。</p>
+            <p>想象我们有一条指向某张图片的URL:<code>http://example.com/to_be_or_not_to_be?.jpg</code>。转化之后的结果就是<code>http://example.com/to_be_or_not_to_be%3F.jpg</code>，这样就避免了URL中有歧义的问号之后的查询语法。</p>
+            <h5>一些陷阱</h5>
+            <h5>不同部分的不同保留字</h5>
+            <p>一个空格在路径参数(path fragment)部分会被编码成<code>%20</code>(绝不是"+")，而<code>+</code>在参数路径部分则可以保留而不被编码。</p>
+            <p>而在查询部分(query)中，空格会被编码成"+"(为了向前兼容)，或者"%20"，而"+"会被编码成"%2B"。</p>
+            <p>举个例子，同样的字符串<code>blue+light blue</code>在不同的部分会被编码成不同样子:</p>
+<pre class="prettyprint lang-javascript">
+var url = "http://example.com/blue+light blue?blue+light blue"
+
+encodeURL(url) 
+// http://example.com/blue+light%20blue?blue%2Blight+blue
+</pre> 
 
 
 
