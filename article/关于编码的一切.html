@@ -20,7 +20,7 @@
         <div class="row">
             <div class="span1"></div>
             <div class="span6">
-                <h3>Javascript: 你真的了解函数声明吗？</h3>
+                <h3>关于Unicode和URL encoding入门的一切以及注意事项</h3>
             </div>
             <div class="span4"></div>
             <div class="span1"></div>
@@ -235,6 +235,7 @@ https://bob:bobby@qingbob.com:8080/file;p=1?q=2#third
                         <td>查询参数(Query parameters)</td>
                         <td>q=2</td>
                     </tr>
+                    <tr>
                         <td>片段(Fragment)</td>
                         <td>third</td>
                     </tr>   
@@ -256,6 +257,123 @@ var url = "http://example.com/blue+light blue?blue+light blue"
 encodeURL(url) 
 // http://example.com/blue+light%20blue?blue%2Blight+blue
 </pre> 
+            <h5>保留字不是你想的那样</h5>
+            <p>大部分人都忽略了"+"在路径部分是可以被允许的。还有一些其他的例子:</p>
+            <ul>
+                <li>"?"在查询部分可以允许不被转义的(unescaped)</li>
+                <li>"/"在查询部分可以允许不被转义</li>
+                <li>"="在路径参数或者查询参数部分可以允许不被转义</li>
+                <li>":@-._~!$&'()*+,;="在路径片段部分可以允许不被转义</li>
+                <li>"/?:@-._~!$&'()*+,;="在片段部分可以允许不被转义</li>
+            </ul>
+            <p>也就是说下面这个URL片段，是不会被编码是合法的：</p>
+<pre class="prettyprint lang-javascript">
+http://qingbob.com/:@-._~!$&'()*+,=;:@-._~!$&'()*+,=:@-._~!$&'()*+,==?/?:@-._~!$'()*+,;=/?:@-._~!$'()*+,;
+</pre>             
+            <p>我们把上面这条URL好好总结一下:</p>
+            <table class="table table-striped">
+                <tbody>
+                    <tr>
+                        <td>协议(Scheme)</td>
+                        <td>https</td>
+                    </tr>
+                    <tr>
+                        <td>主机地址(Host address)</td>
+                        <td>qingbob.com</td>
+                    </tr>
+                    <tr>
+                        <td>路径(Path)</td>
+                        <td>/:@-._~!$&'()*+,=</td>
+                    </tr>
+                    <tr>
+                        <td>路径参数名称(Path parameters name)</td>
+                        <td>:@-._~!$&'()*+,</td>
+                    </tr>
+                    <tr>
+                        <td>路径参数值(Path parameters value)</td>
+                        <td>:@-._~!$&'()*+,==</td>
+                    </tr>                    
+                    <tr>
+                        <td>查询参数名称(Query parameters name)</td>
+                        <td>/?:@-._~!$'()* ,;</td>
+                    </tr>
+                    <tr>
+                        <td>查询参数值(Query parameters value)</td>
+                        <td>/?:@-._~!$'()* ,;==</td>
+                    </tr>
+                    <tr>                    
+                        <td>片段(Fragment)</td>
+                        <td>/?:@-._~!$&'()*+,;=</td>
+                    </tr>   
+                </tbody>
+            </table>            
+            <h5>URL在编码之后是不能被分析的</h5>
+            <p>URL语法只在用来读被编码之前的URL。</p>
+            <p>假设我们有这么一条URL<code>http://example.com/blue%2Fred%3Fand+green</code>，分析结果如下</p>
+            <table class="table table-striped">
+                <tbody>
+                    <tr>
+                        <td>协议(Scheme)</td>
+                        <td>http</td>
+                    </tr>
+                    <tr>
+                        <td>主机(Host)</td>
+                        <td>example.com</td>
+                    </tr>  
+                    <tr>
+                        <td>路径碎片(Path segment)</td>
+                        <td>blue%2Fred%3Fand+green</td>
+                    </tr>  
+                    <tr>
+                        <td>解码之后的路径碎片(Decoded Path segment)</td>
+                        <td>blue/red?and+green</td>
+                    </tr>
+                </tbody>
+            </table>
+            <p>这样翻译的结果就成了，我们在寻找一个名为"blue/red?and+green"的文件。</p>
+            <p>但是如果我们在解码之后再进行翻译<code>http://example.com/blue/red?and+green</code>：</p>
+            <table class="table table-striped">
+                <tbody>
+                    <tr>
+                        <td>协议(Scheme)</td>
+                        <td>http</td>
+                    </tr>
+                    <tr>
+                        <td>主机(Host)</td>
+                        <td>example.com</td>
+                    </tr>  
+                    <tr>
+                        <td>路径碎片(Path segment)</td>
+                        <td>blue</td>
+                    </tr>  
+                    <tr>
+                        <td>路径碎片(Path segment)</td>
+                        <td>red</td>
+                    </tr>                     
+                    <tr>
+                        <td>查询参数名称(Query parameter name)</td>
+                        <td>and green</td>
+                    </tr>
+                </tbody>
+            </table>
+            <p>翻译的结果是，在"blue"文件夹中的名为"red?and+green"的文件。</p>   
+            <p>明显结果就完全不同了，对URL语法进行分析一定要在编码之前进行进行。</p> 
+            <br>    
+            <p>最后参考文献:</p>
+            <ul>
+                <li><a href="http://coding.smashingmagazine.com/2012/06/06/all-about-unicode-utf8-character-sets/" target="_blank">All About Unicode, UTF8 & Character Sets</a></li>
+                <li><a href="http://www.joelonsoftware.com/articles/Unicode.html" target="_blank">The Absolute Minimum Every Software Developer Absolutely, Positively Must Know About Unicode and Character Sets (No Excuses!)</a></li>
+                <li><a href="http://stackoverflow.com/questions/1259084/what-encoding-code-page-is-cmd-exe-using" target="_blank">What encoding/code page is cmd.exe using</a></li>
+                <li><a href="http://stackoverflow.com/questions/18042186/confusion-about-python-unicode" target="_blank">Confusion about python unicode</a></li>
+                <li><a href="http://betterexplained.com/articles/understanding-big-and-little-endian-byte-order/" target="_blank">Understanding Big and Little Endian Byte Order</a></li>
+                <li><a href="http://stackoverflow.com/questions/388490/unicode-characters-in-windows-command-line-how" target="_blank">Unicode characters in Windows command line - how?</a></li>
+                <li><a href="http://en.wikipedia.org/wiki/Code_page" target="_blank">Code page</a></li>
+                <li><a href="http://stackoverflow.com/questions/75980/best-practice-escape-or-encodeuri-encodeuricomponent" target="_blank">Best practice: escape, or encodeURI / encodeURIComponent</a></li>
+                <li><a href="http://webdesign.about.com/od/forms/a/url_encoding.htm" target="_blank">Encoding URLs</a></li>
+                <li><a href="http://blog.lunatech.com/2009/02/03/what-every-web-developer-must-know-about-url-encoding" target="_blank">What every web developer must know about URL encoding</a></li>
+                <li><a href="http://www.w3.org/International/questions/qa-what-is-encoding.en" target="_blank">Character encodings for beginners</a></li>
+            </ul>
+
 
 
 
