@@ -1,0 +1,695 @@
+#Javascript的实例化与继承：请停止使用new关键字
+2013年8月26日front-end
+标题当然是有一点耸人听闻了，但个人觉得使用new关键字确实并非是一个最佳的实践。换句话说，我觉得有更好的实践，让实例化和继承的工作在javascript更友好一些，本文所做的工作就是教你对new关联的操作进行一系列封装，甚至完全抛弃new关键字。
+
+
+##传统的实例化与继承
+
+
+
+还是先温习一下javascript继承的原理吧
+
+假设我们有两个类`Class:function Class() {}`和`SubClass:function SubClass()`{}，SubClass需要继承自Class，应该怎么做？
+
+首先，Class中被继承的属性和方法必须放在Class的prototype属性中
+再者，SubClass中自己的方法和属性也必须放在自己prototype属性中
+别忘了SubClass的prototype也是一个对象，但这个对象的prototype(__proto__)指向的Class的prototype
+这样以来，由于prototype链的一些特性，SubClass的实例便能追溯到Class的方法。这样便实现而来继承
+
+```
+new SubClass()      Object.create(Class.prototype)
+    |                    |
+    V                    V
+SubClass.prototype ---> { }
+                        { }.__proto__ ---> Class.prototype
+```
+
+我们举的第一个例子，要做以下几件事:
+
+有一个父类叫做Human
+使一个名为Man的子类继承自Human
+子类继承父类的一切，并调用父类的构造函数
+实例化这个子类
+
+```
+// 构造函数/基类
+function Human(name) {
+    this.name = name;
+}
+
+// 基类的方法保存在构造函数的prototype属性中
+// 便于子类的继承
+Human.prototype.say = function () {
+    console.log("say");
+}
+
+// 道格拉斯的object方法
+// 等同于Object.create
+function object(o) {
+    var F = function () {};
+    F.prototype = o;
+    return new F();
+}
+
+// 子类Man
+function Man(name, age) {
+    // 调用父类的构造函数
+    Human.call(this, name);
+    // 自己的属性age
+    this.age = age;
+}
+
+// 继承父类的方法
+Man.prototype = object(Human.prototype);
+Man.prototype.constructor = Man;
+
+// 实例化
+var man = new Man("Lee", 22);
+console.log(man);
+```
+
+以上我们可以总结出传统的实例化与继承的几个特点:
+
+传统方法中的“类”一定是一个构造函数——你可能会问还有可能不是构造函数吗？当然可以，文章的最后会介绍如何实现一个不是构造函数的类。
+属性和方法的继承一定是通过prototype实现，也一定是通过Object.create方法，也就是道格拉斯的object方法。你可能又要问了：何以见得，Object.create与object方法是一致？这当然不是我说的，而是在MDN上object是作为Object.create的一个Polyfill方案。
+实例化一个对象，一定是通过new关键字来实现的。（你能回忆起除了new关键字，还有其他哪些方式来创建一个对象吗？）
+
+那么new关键字的不足之处在哪？
+
+
+首先在《Javascript语言精粹》(Javascript: The Good Parts)中，道格拉斯原话是这样叙述的:
+
+> If you forget to include the new prefix when calling a constructor function, then this will not be bound to the new object. Sadly, this will be bound to the global object, so instead of augmenting your new object, you will be clobbering global variables. That is really bad. There is no compile warning, and there is no runtime warning. (page 49)
+
+大意是说在该使用new的时候忘了new关键字，将会非常糟糕。但我不觉得这是一个恰当的理由，或者说这个理由非常牵强。遗忘使用任何东西都会引起一系列的问题，何止于new关键字呢，再者说其实这个是有办法解决的：
+
+```
+function foo()
+{
+   // if user accidentally omits the new keyword, this will 
+   // silently correct the problem...
+   if ( !(this instanceof foo) )
+      return new foo();
+
+   // constructor logic follows...
+}
+```
+或者作为一个更通用的方案，抛出异常即可
+
+```
+function foo()
+{
+    if ( !(this instanceof arguments.callee) ) 
+       throw new Error("Constructor called as a function");
+}
+```
+
+又或者按照John Resig的方案，我们准备一个makeClass工厂函数，把大部分的初始化功能放在一个init方法中，而非构造函数自己中：
+
+```
+// makeClass - By John Resig (MIT Licensed)
+function makeClass(){
+  return function(args){
+    if ( this instanceof arguments.callee ) {
+      if ( typeof this.init == "function" )
+        this.init.apply( this, args.callee ? args : arguments );
+    } else
+      return new arguments.callee( arguments );
+  };
+}
+```
+我认为new关键字不是一个好的实践的原因是因为，
+
+> new is a remnant of the days where JavaScript accepted a Java like syntax for gaining “popularity”.
+And we were pushing it as a little brother to Java, as a complementary language like Visual Basic was to C++ in Microsoft’s language families at the time.
+
+和道格拉斯说的：
+
+> This indirection was intended to make the language seem more familiar to classically trained programmers, but failed to do that, as we can see from the very low opinion Java programmers have of JavaScript. JavaScript’s constructor pattern did not appeal to the classical crowd. It also obscured JavaScript’s true prototypal nature. As a result, there are very few programmers who know how to use the language effectively.
+
+简单来说，javascript是一种prototypal类型语言，在创建之初，为了迎合市场的需要，为了让人们觉得它和Java是类似的，才引入了new关键字。Javascript本应通过它的Prototypical特性来实现实例化和继承，但new关键字让它变得不伦不类。想了解上面引用段落的全篇，可以参考本文最后的参考文献。
+
+
+##把传统方法加以改造
+
+
+我们目前有两种选择，一是完全抛弃new关键字，二是把含有new关键字的操作封装起来，只向外提供友好的接口。现在我们先做第二件事，最后来做第一件事。
+
+那么封装的接口是什么？：
+
+所有的类都派生自我们自己的一个基类Class
+派生出一个子类方法：Class.extend
+实例化一个类方法：Class.create
+开始吧，先把结构搭起来：
+
+```
+// 基类
+function Class() {}
+
+Class.prototype.extend = function () {};
+Class.prototype.create = function () {};
+
+Class.extend = function (props) {
+    return this.prototype.extend.call(this, props);
+}
+因为所有的类都能派生子类都能实例化，加上所有的类都派生自基类Class，所以我们把最关键的extend和create方法放在Class的prototype中
+
+接下来实现create和extend方法，解释就写在注释中了：
+
+Class.prototype.create = function (props) {
+    /*
+        正如开始所说，create实际上是对new的封装
+        create返回的实例实际上是new出来的实例
+        this即指向调用当前create的子类构造函数
+    */
+    var instance = new this();
+    /*
+        将传入的参数作为该实例的“私有”属性
+        更准确应该说是“实例属性”，因为并非私有
+        而是这个实例独有
+    */
+    for (var name in props) {
+        instance[name] = props[name];
+    }
+    return instance;
+}
+
+Class.prototype.extend = function (props) {
+    /*
+        派生出来的新的子类
+    */
+    var SubClass = function () {};
+    /*
+        继承父类的属性，
+        当然前提是父类的属性都放在prototype中
+        而非上面的“实例属性”中
+    */
+    SubClass.prototype = object(this.prototype);
+    for (var name in props) {
+        SubClass.prototype[name] = props[name];
+    }
+    SubClass.prototype.constructor = SubClass;
+
+    /*
+        因为需要以SubClass.extend的方式调用
+        所以要重新赋值
+    */
+    SubClass.extend = SubClass.prototype.extend;
+    SubClass.create = SubClass.prototype.create;
+
+    return SubClass;
+}
+```
+
+那么如何使用，如何对它进行测试呢，还是哪我们上面的Human和Man的例子：
+
+```
+var Human = Class.extend({
+    say: function () {
+        console.log("Hello");
+    }
+});
+
+console.log(Human.create());
+
+var Man = Human.extend({
+    walk: function () {
+        console.log("walk");
+    }
+})
+
+
+console.log(Man.create({
+    name: "Lee",
+    age: 22
+}));
+```
+
+进行再次改造
+
+
+上面的例子还有两个不足之处。
+
+一是我们需要一个独立的初始化实例的函数，比如说叫做init。其实构造函数自己不就是一个初始化函数嘛？对，但如果有一个正式的构造函数会更能满足我们的某些需求，比如我们new一个构造函数，但是我们不想要它的实例，只想要实例上的prototype方法。这种情况就不必调用它的init函数。又或者这个init函数可以“借给”其他类使用
+
+不足之二是我们一个类需要能调用父类方法的机制，比如在子类的同名函数中吼一声this.callSuper，就能调用父类的同名方法。
+
+开始吧
+
+
+首先在派生一个类时，你需要定义一个初始化函数init，比如
+
+```
+// 基类
+var Human = Class.extend({
+    init: function () {
+        this.nature = "Human";
+    },
+    say: function () {
+        console.log("I am a human");
+    }
+})
+```
+
+然后Class.create就可以改造为
+
+```
+// 做了一点优化
+Class.create = Class.prototype.create = function () {
+    /*
+        注意在这里我们只是实例化一个构造函数
+        而非进行真正的“实例”
+    */
+    var instance = new this();
+
+    /*
+        这是我们即将做的，调用父类的构造函数
+    */
+    if (instance.__callSuper) {
+        instance.__callSuper();
+    }
+
+    /*
+        如果对init有定义的话
+    */
+    if (instance.init) {
+        instance.init.apply(instance, arguments);
+    }
+    return instance;
+}
+```
+
+注意上面的 `instance.__callSuper()` ，我们就靠这条语句来实现调用父类的构造函数，那么如何实现呢？具体解释都注释中
+
+```
+Class.extend = Class.prototype.extend = function () {
+    var SubClass = function () {};
+    var _super = this.prototype;
+
+    ...
+
+    // 前提是父类拥有init函数，才能召唤
+    if (_super.init) {
+        // 定义__callSuper方法
+        SubClass.prototype.__callSuper = function () {
+            /*
+                有一种可能是，用户已经定义了__callSuper方法，
+                所以我们需要把用户自己定义的方法暂存起来，
+                以便以后还原
+
+                因为在下一步，我们可能需要覆盖这一个方法
+            */
+            var tmp = SubClass.prototype.__callSuper;
+            if (_super._callSuper) {
+                SubClass.prototype.__callSuper = _super.__callSuper;    
+            }
+            /*
+                注意，上面一步非常关键。
+                上面这一步处理的情况是，
+                当有三层或者三层以上的继承时，
+                可能会出现子类调用父类的init，
+                父类又调用祖父的init
+
+                那么
+                首先保证父类_super.init使用的上下文是子类的，
+                （因为init中添加的各个属性应该是最后添加在子类上）
+                就是下面的_super.init.apply(this, arguments);
+
+                再保证父类_super.init中调用的callSuper
+                （如果存在的话）
+                是父类的callSuper，而不是子类的callSuper
+                因为父类调用父类的callSuper是也会
+                是this.__callSuper的方式调用，
+                那么此时的this应该是指向子类的，
+                而this._callSuper调用的是子类的init，
+                这样就成了一个死循环
+
+                子类调用子类的init，__callSuper
+                所以此处要及时修改上下文
+
+                如果你觉得比较绕的话
+                你可以直接使用
+                if (_super.init) {
+                    SubClass.prototype.callSuper = _super.init；
+                }
+                在三层以上的继承试试，就会出现问题了
+            */
+
+            _super.init.apply(this, arguments);
+
+            // 还原用户定义的方法
+            SubClass.prototype.__callSuper = tmp;
+        }
+    }
+
+    ...
+}
+```
+
+最后，我们还需要一个在子类方法调用父类同名方法的机制，我们可以借用John Resig的实现方法，其实和上面是一个思想，先看看怎么使用：
+
+```
+var Man = Human.extend({
+    init: function () {
+        this.sex = "man";
+    },
+    say: function () {
+        // 调用同名的父类方法
+        this.callSuper();
+        console.log("I am a man");
+    }
+});
+Class.extend = Class.prototype.extend = function (props) {
+    var SubClass = function () {};
+    var _super = this.prototype;
+
+     SubClass.prototype = object(this.prototype);
+     for (var name in props) {
+        // 如果父类同名属性也是一个function
+        if (typeof props[name] == "function" 
+            && typeof _super[name] == "function") {
+
+            SubClass.prototype[name] 
+                = (function (super_fn, fn) {
+                // 返回一个新的函数，把用户函数包装起来
+                return function () {
+                    /*
+                        callSuper是动态生成的，
+                        只有当用户调用同名方法时才会生成
+                    */
+                    // 把用户自定义的callSuper暂存起来
+                    var tmp = this.callSuper;
+                    // callSuper即指向同名父类函数
+                    this.callSuper = super_fn;
+                    /*
+                        callSuper即存在子类同名函数的上下文中
+                        以this.callSuper()形式调用
+                    */
+                    var ret = fn.apply(this, arguments);
+                    this.callSuper = tmp;
+
+                    /*
+                        如果用户没有callsuper方法，则delete
+                    */
+                    if (!this.callSuper) {
+                        delete this.callSuper;
+                    }
+
+                    return ret;
+                }
+            })(_super[name], props[name])  
+        } else {
+            SubClass.prototype[name] = props[name];    
+        }
+
+        ..
+    }
+
+    SubClass.prototype.constructor = SubClass; 
+}
+```
+
+我并不赞同一般方法中的this.callSuper机制，从上面实现的代码来看效率是非常低的。每一次生成实例都需要遍历，与父类方法进行比较。在每一次调用同名方法是，也是要做一些列的操作。更重要的是在传统的面向对象语言中，如C++，Java，子类的同名方法应该是覆盖父类的同名方法的。何来调用父类同名方法之说？我在这里给出的是一种选择，毕竟技术是为业务需求服务的。如果真的有这么一个需求那么也无可厚非。
+但是我赞成在init函数中的callSuper机制，在传统的面向对象语言中，父类拥有的属性子类不是默认就应该有的吗？这也是继承的意义之一吧
+最后我们给出一个完整吧，并不仅仅是完整版，而且是升级版噢，哪里升级了呢？看代码吧：
+
+```
+function Class() {}
+
+Class.extend = function extend(props) {
+
+    var prototype = new this();
+    var _super = this.prototype;
+
+    if (_super.init) {
+        prototype.__callSuper = function () {
+            var tmp = prototype.__callSuper;
+            if (_super.__callSuper) {
+                prototype.__callSuper = _super.__callSuper;
+            }
+
+            _super.init.apply(this, arguments);
+            prototype.__callSuper = tmp;
+        }
+    }
+
+    for (var name in props) {
+
+        if (typeof props[name] == "function" 
+            && typeof _super[name] == "function") {
+
+            prototype[name] = (function (super_fn, fn) {
+                return function () {
+                    var tmp = this.callSuper;
+
+                    this.callSuper = super_fn;
+
+                    var ret = fn.apply(this, arguments);
+
+                    this.callSuper = tmp;
+
+                    if (!this.callSuper) {
+                        delete this.callSuper;
+                    }
+                    return ret;
+                }
+            })(_super[name], props[name])
+        } else {
+            prototype[name] = props[name];    
+        }
+    }
+
+    function Class() {}
+
+    Class.prototype = prototype;
+    Class.prototype.constructor = Class;
+
+    Class.extend =  extend;
+    Class.create = function () {
+
+        var instance = new this();
+
+        if (arguments.callSuper && instance.__callSuper) {
+            instance.__callSuper();
+        }
+
+        if (instance.init) {
+            instance.init.apply(instance. arguments);    
+        }
+        
+        return instance;
+    }
+
+    return Class;
+}
+```
+
+来，我们测试一下吧
+
+```
+var Human = Class.extend({
+    init: function () {
+        this.nature = "Human";
+    },
+    say: function () {
+        console.log("I am a human");
+    }
+})
+
+var human = Human.create();
+console.log(human);
+human.say();
+
+
+var Man = Human.extend({
+    init: function () {
+        this.sex = "man";
+    },
+    say: function () {
+        this.callSuper();
+        console.log("I am a man");
+    }
+});
+
+var man = Man.create();
+console.log(man);
+man.say();
+
+var Person = Man.extend({
+    init: function () {
+        this.name = "lee";
+    },
+    say: function () {
+        this.callSuper();
+        console.log("I am Lee");
+    }
+})
+
+var p = Person.create();
+console.log(p);
+p.say();
+```
+
+真的要抛弃new关键字了
+
+
+无论如何上面的方法我们都使用了new关键字，接下来叙述的是真正不是用new关键字的方法
+
+第一个问题是：如何生成一个对象？
+
+```
+var obj = {};
+var obj = new Fn();
+var obj = Object.create(null)
+```
+
+第一个方法可拓展性太低，第二个方法我们已经决定抛弃了，那重点就在第三个方法
+
+你们还记得第三个方法是怎么用的吗？在MDN中是这样解释的
+
+> Creates a new object with the specified prototype object and properties.
+
+假设我们有一个矩形对象：
+
+```
+var Rectangle = {
+    area: function () {
+        console.log(this.width * this.height);
+    }
+};
+```
+
+我们想生成一个有它所有方法的对象应该怎么办？
+
+```
+var rectangle = Object.create(Rectangle);
+```
+
+生成之后，我们还可以给这个实例赋值长宽，并且取得面积值
+
+```
+var rect = Object.create(Rectangle);
+rect.width = 5;
+rect.height = 9;
+rect.area();
+```
+
+这是一个很神奇的过程，我们没有使用new关键字，但是我们实例化了一个对象，给这个对象加上了自己的属性，并且成功调用了类的方法。
+
+但是我们希望能自动化赋值长宽，没问题，那就定义一个create方法
+
+```
+var Rectangle = {
+    create: function (width, height) {
+      var self = Object.create(this);
+      self.width = width;
+      self.height = height;
+      return self;
+    },
+    area: function () {
+        console.log(this.width * this.height);
+    }
+};
+```
+
+怎么使用呢？
+
+```
+var rect = Rectangle.create(5, 9);
+rect.area();
+```
+
+现在你可能大概明白了，在纯粹使用Object.create的机制下，已经完全抛弃了构造函数这个概念了。一切都是对象，一个类也可以是对象，这个类的实例不过是装饰过的它自己的复制品。
+
+那么如何实现继承呢，假设我们需要一个正方形，继承自这个长方形
+
+```
+var Square = Object.create(Rectangle);
+
+Square.create = function (side) {
+  return Rectangle.create.call(this, side, side);
+}
+
+var sq = Square.create(5);
+sq.area();
+```
+
+这种做法其实和我们第一种最基本的类似
+
+```
+function Man(name, age) {
+    Human.call(this, name);
+    this.age = age;
+} 
+```
+
+上面的方法还是太复杂了，我们希望自动化，于是我们可以写这么一个extend函数
+
+```
+function extend(extension) {
+    var hasOwnProperty = Object.hasOwnProperty;
+    var object = Object.create(this);
+
+    for (var property in extension) {
+      if (hasOwnProperty.call(extension, property) || typeof object[property] === "undefined") {
+        object[property] = extension[property];
+      }
+    }
+
+    return object;
+}
+
+/*
+    其实上面这个方法可以直接写成prototype方法：Object.prototype.extend
+    但这样盲目的修改原生对象的prototype属性是大忌
+    于是还是分开来写了
+*/
+
+var Rectangle = {
+    extend: extend,
+    create: function (width, height) {
+      var self = Object.create(this);
+      self.width = width;
+      self.height = height;
+      return self;
+    },
+    area: function () {
+        console.log(this.width * this.height);
+    }
+};
+```
+
+这样当我们需要继承时，就可以像前几个方法一样用了
+
+```
+var Square = Rectangle.extend({
+    create: function (side) {
+         return Rectangle.create.call(this, side, side);
+    }
+})
+
+var s = Square.create(5);
+s.area();
+```
+
+OK，今天的课就到这里了。其实还有很多工作可以做，比如实现多继承(Mixin模式)，如何实现自定义的instancef方法等等。这篇文章算抛砖引玉吧，有兴趣的朋友可以继续研究下去。
+
+引用资料
+
+[Why Prototypal Inheritance Matters](http://aaditmshah.github.io/why-prototypal-inheritance-matters/)
+
+[Object.create](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/create)
+
+[Object.create() Improves Constructor-Based Inheritance In Javascript - It Doesn't Replace It](http://www.bennadel.com/blog/2184-Object-create-Improves-Constructor-Based-Inheritance-In-Javascript-It-Doesn-t-Replace-It.htm)
+
+[JS101: Object.create](http://dailyjs.com/2012/06/04/js101-object-create/)
+
+[Simple “Class” Instantiation](http://ejohn.org/blog/simple-class-instantiation/)
+
+[Understanding the difference between Object.create() and new SomeFunction() in JavaScript](http://stackoverflow.com/questions/4166616/understanding-the-difference-between-object-create-and-new-somefunction-in-j)
+
+[What is the reason to use the 'new' keyword here?](http://stackoverflow.com/questions/12592913/what-is-the-reason-to-use-the-new-keyword-here)
+
+[JavaScript inheritance: Object.create vs new](http://stackoverflow.com/questions/13040684/javascript-inheritance-object-create-vs-new)
+
+[Is JavaScript 's “new” Keyword Considered Harmful?](http://stackoverflow.com/questions/383402/is-javascript-s-new-keyword-considered-harmful)
