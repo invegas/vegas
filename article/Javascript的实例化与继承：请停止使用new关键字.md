@@ -253,18 +253,17 @@ man.walk();
 
 nice!基本框架已经搭建起来，接下来继续补充功能
 
-1. 我们希望把实例化函数独立出来。也就是说当实例化一个类时，我们希望是调用一个叫做init的函数，而不是实例化自己。这样做的好处是灵活，我们甚至可以
+1. 我们希望把构造函数独立出来，并且统一命名为init。就好像`Backbone.js`中每一个view都有一个`initialize`方法一样
 
-2. 需要一个子类能调用父类方法的机制，比如在子类的同名函数中吼一声this.callSuper，就能调用父类的同名方法。
+2. 我还想新增一个子类方法调用父类同名方法的机制，比如说在父类和子类的中都定义了一个say方法，那么只要在子类的say中调用`this.callSuper()`就能调用父类的say方法了。例如：
 
-开始吧
-
-
-首先在派生一个类时，你需要定义一个初始化函数init，比如
 
 ```
 // 基类
 var Human = Class.extend({
+    /*
+        你需要在定义类时定义构造方法init
+    */
     init: function () {
         this.nature = "Human";
     },
@@ -272,106 +271,7 @@ var Human = Class.extend({
         console.log("I am a human");
     }
 })
-```
 
-然后Class.create就可以改造为
-
-```
-// 做了一点优化
-Class.create = Class.prototype.create = function () {
-    /*
-        注意在这里我们只是实例化一个构造函数
-        而非进行真正的“实例”
-    */
-    var instance = new this();
-
-    /*
-        这是我们即将做的，调用父类的构造函数
-    */
-    if (instance.__callSuper) {
-        instance.__callSuper();
-    }
-
-    /*
-        如果对init有定义的话
-    */
-    if (instance.init) {
-        instance.init.apply(instance, arguments);
-    }
-    return instance;
-}
-```
-
-注意上面的 `instance.__callSuper()` ，我们就靠这条语句来实现调用父类的构造函数，那么如何实现呢？具体解释都注释中
-
-```
-Class.extend = Class.prototype.extend = function () {
-    var SubClass = function () {};
-    var _super = this.prototype;
-
-    ...
-
-    // 前提是父类拥有init函数，才能召唤
-    if (_super.init) {
-        // 定义__callSuper方法
-        SubClass.prototype.__callSuper = function () {
-            /*
-                有一种可能是，用户已经定义了__callSuper方法，
-                所以我们需要把用户自己定义的方法暂存起来，
-                以便以后还原
-
-                因为在下一步，我们可能需要覆盖这一个方法
-            */
-            var tmp = SubClass.prototype.__callSuper;
-            if (_super._callSuper) {
-                SubClass.prototype.__callSuper = _super.__callSuper;    
-            }
-            /*
-                注意，上面一步非常关键。
-                上面这一步处理的情况是，
-                当有三层或者三层以上的继承时，
-                可能会出现子类调用父类的init，
-                父类又调用祖父的init
-
-                那么
-                首先保证父类_super.init使用的上下文是子类的，
-                （因为init中添加的各个属性应该是最后添加在子类上）
-                就是下面的_super.init.apply(this, arguments);
-
-                再保证父类_super.init中调用的callSuper
-                （如果存在的话）
-                是父类的callSuper，而不是子类的callSuper
-                因为父类调用父类的callSuper是也会
-                是this.__callSuper的方式调用，
-                那么此时的this应该是指向子类的，
-                而this._callSuper调用的是子类的init，
-                这样就成了一个死循环
-
-                子类调用子类的init，__callSuper
-                所以此处要及时修改上下文
-
-                如果你觉得比较绕的话
-                你可以直接使用
-                if (_super.init) {
-                    SubClass.prototype.callSuper = _super.init；
-                }
-                在三层以上的继承试试，就会出现问题了
-            */
-
-            _super.init.apply(this, arguments);
-
-            // 还原用户定义的方法
-            SubClass.prototype.__callSuper = tmp;
-        }
-    }
-
-    ...
-}
-```
-
-最后，我们还需要一个在子类方法调用父类同名方法的机制，我们可以借用John Resig的实现方法，其实和上面是一个思想，先看看怎么使用：
-
-```
 var Man = Human.extend({
     init: function () {
         this.sex = "man";
@@ -382,25 +282,47 @@ var Man = Human.extend({
         console.log("I am a man");
     }
 });
+```
+
+那么Class.create就不仅仅是new一个构造函数了：
+
+```
+Class.create = Class.prototype.create = function () {
+    /*
+        注意在这里我们只是实例化一个构造函数
+        而非最后返回的“实例”，这个实例目前只是一个“壳”
+        需要init函数对这个“壳”填充属性和方法
+    */
+    var instance = new this();
+
+    /*
+        如果对init有定义的话
+    */
+    if (instance.init) {
+        instance.init.apply(instance, arguments);
+    }
+    return instance;
+}
+
+实现在子类方法调用父类同名方法的机制，我们可以借用John Resig的[实现](http://ejohn.org/blog/simple-javascript-inheritance/)
+
+```
+
 Class.extend = Class.prototype.extend = function (props) {
     var SubClass = function () {};
     var _super = this.prototype;
 
-     SubClass.prototype = object(this.prototype);
+     SubClass.prototype = Object.create(this.prototype);
      for (var name in props) {
-        // 如果父类同名属性也是一个function
+        // 如果父类同名属性也是一个函数
         if (typeof props[name] == "function" 
             && typeof _super[name] == "function") {
-
+            // 重新定义用户的同名函数，把用户的函数包装起来
             SubClass.prototype[name] 
                 = (function (super_fn, fn) {
-                // 返回一个新的函数，把用户函数包装起来
                 return function () {
-                    /*
-                        callSuper是动态生成的，
-                        只有当用户调用同名方法时才会生成
-                    */
-                    // 把用户自定义的callSuper暂存起来
+
+                    // 如果用户有自定义callSuper的话，暂存起来
                     var tmp = this.callSuper;
                     // callSuper即指向同名父类函数
                     this.callSuper = super_fn;
@@ -412,7 +334,7 @@ Class.extend = Class.prototype.extend = function (props) {
                     this.callSuper = tmp;
 
                     /*
-                        如果用户没有callsuper方法，则delete
+                        如果用户没有自定义的callsuper方法，则delete
                     */
                     if (!this.callSuper) {
                         delete this.callSuper;
@@ -432,9 +354,7 @@ Class.extend = Class.prototype.extend = function (props) {
 }
 ```
 
-我并不赞同一般方法中的this.callSuper机制，从上面实现的代码来看效率是非常低的。每一次生成实例都需要遍历，与父类方法进行比较。在每一次调用同名方法是，也是要做一些列的操作。更重要的是在传统的面向对象语言中，如C++，Java，子类的同名方法应该是覆盖父类的同名方法的。何来调用父类同名方法之说？我在这里给出的是一种选择，毕竟技术是为业务需求服务的。如果真的有这么一个需求那么也无可厚非。
-但是我赞成在init函数中的callSuper机制，在传统的面向对象语言中，父类拥有的属性子类不是默认就应该有的吗？这也是继承的意义之一吧
-最后我们给出一个完整吧，并不仅仅是完整版，而且是升级版噢，哪里升级了呢？看代码吧：
+最后我们给出一个完整吧，并且做了一些优化
 
 ```
 function Class() {}
@@ -443,18 +363,6 @@ Class.extend = function extend(props) {
 
     var prototype = new this();
     var _super = this.prototype;
-
-    if (_super.init) {
-        prototype.__callSuper = function () {
-            var tmp = prototype.__callSuper;
-            if (_super.__callSuper) {
-                prototype.__callSuper = _super.__callSuper;
-            }
-
-            _super.init.apply(this, arguments);
-            prototype.__callSuper = tmp;
-        }
-    }
 
     for (var name in props) {
 
@@ -488,18 +396,14 @@ Class.extend = function extend(props) {
     Class.prototype.constructor = Class;
 
     Class.extend =  extend;
-    Class.create = function () {
+    Class.create = Class.prototype.create = function () {
 
         var instance = new this();
 
-        if (arguments.callSuper && instance.__callSuper) {
-            instance.__callSuper();
+        if (instance.init) {
+            instance.init.apply(instance, arguments);
         }
 
-        if (instance.init) {
-            instance.init.apply(instance. arguments);    
-        }
-        
         return instance;
     }
 
@@ -523,9 +427,9 @@ var human = Human.create();
 console.log(human);
 human.say();
 
-
 var Man = Human.extend({
     init: function () {
+        this.callSuper();
         this.sex = "man";
     },
     say: function () {
@@ -540,6 +444,7 @@ man.say();
 
 var Person = Man.extend({
     init: function () {
+        this.callSuper();
         this.name = "lee";
     },
     say: function () {
@@ -548,10 +453,11 @@ var Person = Man.extend({
     }
 })
 
-var p = Person.create();
-console.log(p);
-p.say();
+var person = Person.create();
+console.log(person);
+person.say();
 ```
+[DEMO](http://jsfiddle.net/4qRUz/)
 
 真的要抛弃new关键字了
 
