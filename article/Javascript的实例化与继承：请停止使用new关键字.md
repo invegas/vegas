@@ -1,6 +1,6 @@
 #Javascript的实例化与继承：请停止使用new关键字
 
-必须承认标题是有些耸人听闻了:)。我的本意其实是想说，使用new关键字并非是最佳的实践，换而言之，我觉得有更好的实践，能让javascript中的实例化和继承的工作更友好一些。本文所做的工作就是对与new相关联的面向对象一系列操作进行封装，甚至完全抛弃new关键字，以便提供更快捷的、更易让人理解的实现面向实现方式。
+必须承认标题是有些耸人听闻了。但个人认为使用new关键字并非是最佳的实践，换而言之，有更好的方式能让javascript中的实例化和继承的工作更友好一些。本文所做的工作就是对与new相关联的面向对象一系列操作进行封装，甚至完全抛弃new关键字，以便提供更快捷的、更易让人理解的实现面向实现方式。
 
 
 ##传统的实例化与继承
@@ -21,13 +21,11 @@ SubClass.prototype ---> { }
                         { }.__proto__ ---> Class.prototype
 ```
 
-还是举一个具体的例子吧，比如我们要做以几个功能:
+还是举一个具体的例子吧，下面的代码中，我们做了以下几件事:
 
-- 有一个父类叫做Human
-- 使一个名为Man的子类继承自Human
+- 定义一个父类叫做Human
+- 定义一个名为Man的子类继承自Human
 - 子类继承父类的一切属性，并调用父类的构造函数，实例化这个子类
-
-代码如下：
 
 ```
 // 构造函数/基类
@@ -73,15 +71,15 @@ man.say();
 
 [DEMO](http://jsfiddle.net/gP9g5/)
 
-通过上面的DEMO我们可以总结出传统的实例化与继承的几个特点:
+通过上面的代码可以总结出传统的实例化与继承的几个特点:
 
-- 传统方法中的“类”一定是一个构造函数——你可能会问还有可能不是构造函数吗？当然可以，文章的最后会介绍如何实现一个不是构造函数的类。
-- 属性和方法的继承一定是通过prototype实现，也一定是通过Object.create方法。
-- 实例化一个对象，一定是通过new关键字来实现的。（你能回忆起除了new关键字，还有其他哪些方式来创建一个对象吗？）
+- 传统方法中的“类”一定是一个构造函数。
+- 属性和方法绑定在prototype属性上，并借助prototype的特性实现继承。
+- 通过new关键字来实例化一个对象。
 
-上面有一个小细节也许会让有的朋友会疑惑，何以见得，Object.create方法是与道格拉斯的object方法是一致呢？
+有一个小细节需要解释，为什么我会十分的肯定Object.create方法是与道格拉斯的object方法是一致呢？
 
-呵，这当然不是想当然的，而是在MDN上，object方法是作为Object.create的一个Polyfill方案：
+这当然不是我想当然的结果，而是在MDN上，object方法就是作为Object.create的一个Polyfill方案：
 
 - [Object.create](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/create)
 - [Douglas Crockford's object method](http://javascript.crockford.com/prototypal.html)
@@ -117,7 +115,7 @@ function foo()
 }
 ```
 
-又或者按照[John Resig的方案](http://ejohn.org/blog/simple-class-instantiation/)，我们准备一个makeClass工厂函数，把大部分的初始化功能放在一个init方法中，而非构造函数自己中：
+又或者按照[John Resig的方案](http://ejohn.org/blog/simple-class-instantiation/)，准备一个makeClass工厂函数，把大部分的初始化功能放在一个init方法中，而非构造函数自己中：
 
 ```
 // makeClass - By John Resig (MIT Licensed)
@@ -133,14 +131,14 @@ function makeClass(){
 ```
 
 
-我认为new关键字不是一个好的实践的原因是因为：
+而在我看来new关键字不是一个好的实践的原因是因为：
 
-> new is a remnant of the days where JavaScript accepted a Java like syntax for gaining “popularity”.
-And we were pushing it as a little brother to Java, as a complementary language like Visual Basic was to C++ in Microsoft’s language families at the time.
+> [new is a remnant of the days where JavaScript accepted a Java like syntax for gaining “popularity”.
+And we were pushing it as a little brother to Java, as a complementary language like Visual Basic was to C++ in Microsoft’s language families at the time.](http://dailyjs.com/2010/05/24/history-of-javascript-1/)
 
-和道格拉斯说的：
+和道格拉斯所说的：
 
-> This indirection was intended to make the language seem more familiar to classically trained programmers, but failed to do that, as we can see from the very low opinion Java programmers have of JavaScript. JavaScript’s constructor pattern did not appeal to the classical crowd. It also obscured JavaScript’s true prototypal nature. As a result, there are very few programmers who know how to use the language effectively.
+> [This indirection was intended to make the language seem more familiar to classically trained programmers, but failed to do that, as we can see from the very low opinion Java programmers have of JavaScript. JavaScript’s constructor pattern did not appeal to the classical crowd. It also obscured JavaScript’s true prototypal nature. As a result, there are very few programmers who know how to use the language effectively.](http://javascript.crockford.com/prototypal.html)
 
 简单来说，javascript是一种prototypal类型语言，在创建之初，是为了迎合市场的需要，让人们觉得它和Java是类似的，才引入了new关键字。Javascript本应通过它的Prototypical特性来实现实例化和继承，但new关键字让它变得不伦不类。
 
@@ -150,12 +148,10 @@ And we were pushing it as a little brother to Java, as a complementary language 
 
 既然new关键字不够友好，那么我们有两个办法可以解决这个问题，一是完全抛弃new关键字，二是把含有new关键字的操作封装起来，只向外提供友好的接口。现在我们先做第二件事。
 
-我希望我们的基类`Class`，只向外提供两个接口：
+我们开始构造一个最原始的基类`Class`（类似于Javascript中的Object类），并且只向外提供两个接口：
 
 - Class.extend 用于拓展子类
 - Class.create 用于创建实例
-
-用类似于`Backbone.js`中创建子类方式创建子类
 
 ```
 // 基类
@@ -171,7 +167,7 @@ Class.extend = function (props) {
 }
 
 ```
-因为我们希望子类也能派生出自己的子类，也能实例化，所以我们把公共的extend和create方法放在Class的prototype属性中。接下是具体实现：
+extend和create的具体实现：
 
 ```
 Class.prototype.create = function (props) {
@@ -182,9 +178,7 @@ Class.prototype.create = function (props) {
     */
     var instance = new this();
     /*
-        将传入的参数作为该实例的“私有”属性，
-        更准确应该说是“实例属性”，因为并非私有
-        而是这个实例独有
+        绑定该实例的属性
     */
     for (var name in props) {
         instance[name] = props[name];
@@ -218,7 +212,7 @@ Class.prototype.extend = function (props) {
     return SubClass;
 }
 ```
-还是以上面Human和Man的例子进行测吧：
+仍然以Human和Man类举例使用说明：
 
 ```
 var Human = Class.extend({
@@ -253,7 +247,7 @@ man.walk();
 
 nice!基本框架已经搭建起来，接下来继续补充功能
 
-1. 我们希望把构造函数独立出来，并且统一命名为init。就好像`Backbone.js`中每一个view都有一个`initialize`方法一样
+1. 我们希望把构造函数独立出来，并且统一命名为init。就好像`Backbone.js`中每一个view都有一个`initialize`方法一样。这样能让初始化更灵活和标准化，甚至可以把init构造函数借出去
 
 2. 我还想新增一个子类方法调用父类同名方法的机制，比如说在父类和子类的中都定义了一个say方法，那么只要在子类的say中调用`this.callSuper()`就能调用父类的say方法了。例如：
 
@@ -290,7 +284,8 @@ var Man = Human.extend({
 Class.create = Class.prototype.create = function () {
     /*
         注意在这里我们只是实例化一个构造函数
-        而非最后返回的“实例”，这个实例目前只是一个“壳”
+        而非最后返回的“实例”，
+        可以理解这个实例目前只是一个“壳”
         需要init函数对这个“壳”填充属性和方法
     */
     var instance = new this();
@@ -303,15 +298,15 @@ Class.create = Class.prototype.create = function () {
     }
     return instance;
 }
+```
 
-实现在子类方法调用父类同名方法的机制，我们可以借用John Resig的[实现](http://ejohn.org/blog/simple-javascript-inheritance/)
+实现在子类方法调用父类同名方法的机制，我们可以借用John Resig的[方案](http://ejohn.org/blog/simple-javascript-inheritance/)
 
 ```
 
 Class.extend = Class.prototype.extend = function (props) {
     var SubClass = function () {};
     var _super = this.prototype;
-
      SubClass.prototype = Object.create(this.prototype);
      for (var name in props) {
         // 如果父类同名属性也是一个函数
@@ -344,6 +339,7 @@ Class.extend = Class.prototype.extend = function (props) {
                 }
             })(_super[name], props[name])  
         } else {
+            // 如果是非同名属性或者方法
             SubClass.prototype[name] = props[name];    
         }
 
@@ -354,7 +350,7 @@ Class.extend = Class.prototype.extend = function (props) {
 }
 ```
 
-最后我们给出一个完整吧，并且做了一些优化
+最后给出一个完整版，并且做了一些优化：
 
 ```
 function Class() {}
@@ -411,7 +407,7 @@ Class.extend = function extend(props) {
 }
 ```
 
-来，我们测试一下吧
+下面是测试的代码，为了验证上面代码的健壮性，故意实现三层继承
 
 ```
 var Human = Class.extend({
@@ -459,24 +455,9 @@ person.say();
 ```
 [DEMO](http://jsfiddle.net/4qRUz/)
 
-真的要抛弃new关键字了
+##是时候彻底抛弃new关键字了
 
-
-无论如何上面的方法我们都使用了new关键字，接下来叙述的是真正不是用new关键字的方法
-
-第一个问题是：如何生成一个对象？
-
-```
-var obj = {};
-var obj = new Fn();
-var obj = Object.create(null)
-```
-
-第一个方法可拓展性太低，第二个方法我们已经决定抛弃了，那重点就在第三个方法
-
-你们还记得第三个方法是怎么用的吗？在MDN中是这样解释的
-
-> Creates a new object with the specified prototype object and properties.
+如果不使用new关键字，那么我们需要转投上两节中反复使用的`Object.create`来生产新的对象
 
 假设我们有一个矩形对象：
 
@@ -488,7 +469,7 @@ var Rectangle = {
 };
 ```
 
-我们想生成一个有它所有方法的对象应该怎么办？
+借助Object.create，我们可以生成一个拥有它所有方法的对象：
 
 ```
 var rectangle = Object.create(Rectangle);
@@ -503,7 +484,7 @@ rect.height = 9;
 rect.area();
 ```
 
-这是一个很神奇的过程，我们没有使用new关键字，但是我们实例化了一个对象，给这个对象加上了自己的属性，并且成功调用了类的方法。
+注意这个过程我们没有使用new关键字，但是我们相当于实例化了一个对象(rectangle)，给这个对象加上了自己的属性，并且成功调用了类(Rectangle)的方法。
 
 但是我们希望能自动化赋值长宽，没问题，那就定义一个create方法
 
@@ -521,16 +502,16 @@ var Rectangle = {
 };
 ```
 
-怎么使用呢？
+使用方式如下：
 
 ```
 var rect = Rectangle.create(5, 9);
 rect.area();
 ```
 
-现在你可能大概明白了，在纯粹使用Object.create的机制下，已经完全抛弃了构造函数这个概念了。一切都是对象，一个类也可以是对象，这个类的实例不过是装饰过的它自己的复制品。
+现在你可能大概明白了，在纯粹使用Object.create的机制下，已经完全抛弃了构造函数这个概念了。一切都是对象，一个类也可以是对象，这个类的实例不过是一个它自己的复制品。
 
-那么如何实现继承呢，假设我们需要一个正方形，继承自这个长方形
+让我们来看看如何实现继承，我们现在需要一个正方形，继承自这个长方形
 
 ```
 var Square = Object.create(Rectangle);
@@ -538,7 +519,11 @@ var Square = Object.create(Rectangle);
 Square.create = function (side) {
   return Rectangle.create.call(this, side, side);
 }
+```
 
+实例化它:
+
+```
 var sq = Square.create(5);
 sq.area();
 ```
@@ -552,7 +537,7 @@ function Man(name, age) {
 } 
 ```
 
-上面的方法还是太复杂了，我们希望自动化，于是我们可以写这么一个extend函数
+上面的方法还是太复杂了，我们希望进一步自动化，于是我们可以写这么一个extend函数
 
 ```
 function extend(extension) {
@@ -569,9 +554,8 @@ function extend(extension) {
 }
 
 /*
-    其实上面这个方法可以直接写成prototype方法：Object.prototype.extend
-    但这样盲目的修改原生对象的prototype属性是大忌
-    于是还是分开来写了
+    其实上面这个方法可以直接绑定在原生的Object对象上：Object.prototype.extend
+    但个人不推荐这种做法
 */
 
 var Rectangle = {
@@ -592,6 +576,7 @@ var Rectangle = {
 
 ```
 var Square = Rectangle.extend({
+    // 重写实例化方法
     create: function (side) {
          return Rectangle.create.call(this, side, side);
     }
@@ -601,7 +586,11 @@ var s = Square.create(5);
 s.area();
 ```
 
-OK，今天的课就到这里了。其实还有很多工作可以做，比如实现多继承(Mixin模式)，如何实现自定义的instancef方法等等。这篇文章算抛砖引玉吧，有兴趣的朋友可以继续研究下去。
+##结束语
+
+本文对去new关键字的方法做了一些罗列，但工作还远远没有结束，有非常多的地方值得拓展，比如如何重新定义`instance of`方法，用于判断一个对象是否是一个类的实例？如何在去new关键字的基础上继续实现多继承？希望本文的内容在这里只是抛砖引玉，能够开拓大家的思路。
+
+
 
 引用资料
 
