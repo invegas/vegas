@@ -1,20 +1,17 @@
 #Javascript的实例化与继承：请停止使用new关键字
-2013年8月26日front-end
-标题当然是有一点耸人听闻了，但个人觉得使用new关键字确实并非是一个最佳的实践。换句话说，我觉得有更好的实践，让实例化和继承的工作在javascript更友好一些，本文所做的工作就是教你对new关联的操作进行一系列封装，甚至完全抛弃new关键字。
+
+必须承认标题是有些耸人听闻了:)。我的本意其实是想说，使用new关键字并非是最佳的实践，换而言之，我觉得有更好的实践，能让javascript中的实例化和继承的工作更友好一些。本文所做的工作就是对与new相关联的面向对象一系列操作进行封装，甚至完全抛弃new关键字，以便提供更快捷的、更易让人理解的实现面向实现方式。
 
 
 ##传统的实例化与继承
 
+假设我们有两个类`Class:function Class() {}`和`SubClass:function SubClass()`{}，SubClass需要继承自Class，传统方法的方法一般是按如下步骤来组织和实现的：
 
+- Class中 **被继承的属性和方法** 必须放在Class的prototype属性中
+- SubClass中 **自己的方法和属性** 也必须放在自己prototype属性中
+- SubClass的prototype对象的prototype(__proto__)属性 必须指向的Class的prototype
 
-还是先温习一下javascript继承的原理吧
-
-假设我们有两个类`Class:function Class() {}`和`SubClass:function SubClass()`{}，SubClass需要继承自Class，应该怎么做？
-
-首先，Class中被继承的属性和方法必须放在Class的prototype属性中
-再者，SubClass中自己的方法和属性也必须放在自己prototype属性中
-别忘了SubClass的prototype也是一个对象，但这个对象的prototype(__proto__)指向的Class的prototype
-这样以来，由于prototype链的一些特性，SubClass的实例便能追溯到Class的方法。这样便实现而来继承
+这样以来，由于prototype链的 特性，SubClass的实例便能追溯到Class的方法。这样便实现而来继承
 
 ```
 new SubClass()      Object.create(Class.prototype)
@@ -24,12 +21,13 @@ SubClass.prototype ---> { }
                         { }.__proto__ ---> Class.prototype
 ```
 
-我们举的第一个例子，要做以下几件事:
+还是举一个具体的例子吧，比如我们要做以几个功能:
 
-有一个父类叫做Human
-使一个名为Man的子类继承自Human
-子类继承父类的一切，并调用父类的构造函数
-实例化这个子类
+- 有一个父类叫做Human
+- 使一个名为Man的子类继承自Human
+- 子类继承父类的一切属性，并调用父类的构造函数，实例化这个子类
+
+代码如下：
 
 ```
 // 构造函数/基类
@@ -37,21 +35,24 @@ function Human(name) {
     this.name = name;
 }
 
-// 基类的方法保存在构造函数的prototype属性中
-// 便于子类的继承
+/* 
+    基类的方法保存在构造函数的prototype属性中
+    便于子类的继承
+*/
 Human.prototype.say = function () {
     console.log("say");
 }
 
-// 道格拉斯的object方法
-// 等同于Object.create
+/*
+    道格拉斯的object方法（等同于object.create方法）
+*/
 function object(o) {
     var F = function () {};
     F.prototype = o;
     return new F();
 }
 
-// 子类Man
+// 子类构造函数
 function Man(name, age) {
     // 调用父类的构造函数
     Human.call(this, name);
@@ -63,38 +64,50 @@ function Man(name, age) {
 Man.prototype = object(Human.prototype);
 Man.prototype.constructor = Man;
 
-// 实例化
+// 实例化子类
 var man = new Man("Lee", 22);
 console.log(man);
+// 调用父类的say方法：
+man.say();
 ```
 
-以上我们可以总结出传统的实例化与继承的几个特点:
+[DEMO](http://jsfiddle.net/gP9g5/)
 
-传统方法中的“类”一定是一个构造函数——你可能会问还有可能不是构造函数吗？当然可以，文章的最后会介绍如何实现一个不是构造函数的类。
-属性和方法的继承一定是通过prototype实现，也一定是通过Object.create方法，也就是道格拉斯的object方法。你可能又要问了：何以见得，Object.create与object方法是一致？这当然不是我说的，而是在MDN上object是作为Object.create的一个Polyfill方案。
-实例化一个对象，一定是通过new关键字来实现的。（你能回忆起除了new关键字，还有其他哪些方式来创建一个对象吗？）
+通过上面的DEMO我们可以总结出传统的实例化与继承的几个特点:
 
-那么new关键字的不足之处在哪？
+- 传统方法中的“类”一定是一个构造函数——你可能会问还有可能不是构造函数吗？当然可以，文章的最后会介绍如何实现一个不是构造函数的类。
+- 属性和方法的继承一定是通过prototype实现，也一定是通过Object.create方法。
+- 实例化一个对象，一定是通过new关键字来实现的。（你能回忆起除了new关键字，还有其他哪些方式来创建一个对象吗？）
+
+上面有一个小细节也许会让有的朋友会疑惑，何以见得，Object.create方法是与道格拉斯的object方法是一致呢？
+
+呵，这当然不是想当然的，而是在MDN上，object方法是作为Object.create的一个Polyfill方案：
+
+- [Object.create](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/create)
+- [Douglas Crockford's object method](http://javascript.crockford.com/prototypal.html)
+
+**那么new关键字的不足之处在哪？**
 
 
-首先在《Javascript语言精粹》(Javascript: The Good Parts)中，道格拉斯原话是这样叙述的:
+在《Javascript语言精粹》(Javascript: The Good Parts)中，道格拉斯认为应该避免使用new关键字:
 
 > If you forget to include the new prefix when calling a constructor function, then this will not be bound to the new object. Sadly, this will be bound to the global object, so instead of augmenting your new object, you will be clobbering global variables. That is really bad. There is no compile warning, and there is no runtime warning. (page 49)
 
-大意是说在该使用new的时候忘了new关键字，将会非常糟糕。但我不觉得这是一个恰当的理由，或者说这个理由非常牵强。遗忘使用任何东西都会引起一系列的问题，何止于new关键字呢，再者说其实这个是有办法解决的：
+大意是说在应该使用new的时候如果忘了new关键字，会引发一些问题。
+
+但个人认为这个理由牵强了，毕竟你遗忘使用任何关键字都会引起一系列的问题。再退一步说，这个问题是[完全可以避免的](http://stackoverflow.com/questions/383402/is-javascript-s-new-keyword-considered-harmful#answer-383503)：
 
 ```
 function foo()
-{
-   // if user accidentally omits the new keyword, this will 
-   // silently correct the problem...
+{   
+   // 如果忘了使用关键字，这一步骤会悄悄帮你修复这个问题
    if ( !(this instanceof foo) )
       return new foo();
 
-   // constructor logic follows...
+   // 构造函数的逻辑继续……
 }
 ```
-或者作为一个更通用的方案，抛出异常即可
+或者更通用的抛出异常即可
 
 ```
 function foo()
@@ -104,7 +117,7 @@ function foo()
 }
 ```
 
-又或者按照John Resig的方案，我们准备一个makeClass工厂函数，把大部分的初始化功能放在一个init方法中，而非构造函数自己中：
+又或者按照[John Resig的方案](http://ejohn.org/blog/simple-class-instantiation/)，我们准备一个makeClass工厂函数，把大部分的初始化功能放在一个init方法中，而非构造函数自己中：
 
 ```
 // makeClass - By John Resig (MIT Licensed)
@@ -118,7 +131,9 @@ function makeClass(){
   };
 }
 ```
-我认为new关键字不是一个好的实践的原因是因为，
+
+
+我认为new关键字不是一个好的实践的原因是因为：
 
 > new is a remnant of the days where JavaScript accepted a Java like syntax for gaining “popularity”.
 And we were pushing it as a little brother to Java, as a complementary language like Visual Basic was to C++ in Microsoft’s language families at the time.
@@ -127,44 +142,47 @@ And we were pushing it as a little brother to Java, as a complementary language 
 
 > This indirection was intended to make the language seem more familiar to classically trained programmers, but failed to do that, as we can see from the very low opinion Java programmers have of JavaScript. JavaScript’s constructor pattern did not appeal to the classical crowd. It also obscured JavaScript’s true prototypal nature. As a result, there are very few programmers who know how to use the language effectively.
 
-简单来说，javascript是一种prototypal类型语言，在创建之初，为了迎合市场的需要，为了让人们觉得它和Java是类似的，才引入了new关键字。Javascript本应通过它的Prototypical特性来实现实例化和继承，但new关键字让它变得不伦不类。想了解上面引用段落的全篇，可以参考本文最后的参考文献。
+简单来说，javascript是一种prototypal类型语言，在创建之初，是为了迎合市场的需要，让人们觉得它和Java是类似的，才引入了new关键字。Javascript本应通过它的Prototypical特性来实现实例化和继承，但new关键字让它变得不伦不类。
 
 
 ##把传统方法加以改造
 
 
-我们目前有两种选择，一是完全抛弃new关键字，二是把含有new关键字的操作封装起来，只向外提供友好的接口。现在我们先做第二件事，最后来做第一件事。
+既然new关键字不够友好，那么我们有两个办法可以解决这个问题，一是完全抛弃new关键字，二是把含有new关键字的操作封装起来，只向外提供友好的接口。现在我们先做第二件事。
 
-那么封装的接口是什么？：
+我希望我们的基类`Class`，只向外提供两个接口：
 
-所有的类都派生自我们自己的一个基类Class
-派生出一个子类方法：Class.extend
-实例化一个类方法：Class.create
-开始吧，先把结构搭起来：
+- Class.extend 用于拓展子类
+- Class.create 用于创建实例
+
+用类似于`Backbone.js`中创建子类方式创建子类
 
 ```
 // 基类
 function Class() {}
 
+// 将extend和create置于prototype对象中，以便子类继承
 Class.prototype.extend = function () {};
 Class.prototype.create = function () {};
 
+// 为了能在基类上直接以.extend的方式进行调用
 Class.extend = function (props) {
     return this.prototype.extend.call(this, props);
 }
-因为所有的类都能派生子类都能实例化，加上所有的类都派生自基类Class，所以我们把最关键的extend和create方法放在Class的prototype中
 
-接下来实现create和extend方法，解释就写在注释中了：
+```
+因为我们希望子类也能派生出自己的子类，也能实例化，所以我们把公共的extend和create方法放在Class的prototype属性中。接下是具体实现：
 
+```
 Class.prototype.create = function (props) {
     /*
-        正如开始所说，create实际上是对new的封装
-        create返回的实例实际上是new出来的实例
-        this即指向调用当前create的子类构造函数
+        create实际上是对new的封装；
+        create返回的实例实际上就是new构造出的实例；
+        this即指向调用当前create的构造函数；
     */
     var instance = new this();
     /*
-        将传入的参数作为该实例的“私有”属性
+        将传入的参数作为该实例的“私有”属性，
         更准确应该说是“实例属性”，因为并非私有
         而是这个实例独有
     */
@@ -180,19 +198,19 @@ Class.prototype.extend = function (props) {
     */
     var SubClass = function () {};
     /*
-        继承父类的属性，
+        继承父类的属性和方法，
         当然前提是父类的属性都放在prototype中
-        而非上面的“实例属性”中
+        而非上面create方法的“实例属性”中
     */
-    SubClass.prototype = object(this.prototype);
+    SubClass.prototype = Object.create(this.prototype);
+    // 并且添加自己的方法和属性
     for (var name in props) {
         SubClass.prototype[name] = props[name];
     }
     SubClass.prototype.constructor = SubClass;
 
     /*
-        因为需要以SubClass.extend的方式调用
-        所以要重新赋值
+        介于需要以.extend的方式和.create的方式调用：
     */
     SubClass.extend = SubClass.prototype.extend;
     SubClass.create = SubClass.prototype.create;
@@ -200,8 +218,7 @@ Class.prototype.extend = function (props) {
     return SubClass;
 }
 ```
-
-那么如何使用，如何对它进行测试呢，还是哪我们上面的Human和Man的例子：
+还是以上面Human和Man的例子进行测吧：
 
 ```
 var Human = Class.extend({
@@ -210,29 +227,35 @@ var Human = Class.extend({
     }
 });
 
-console.log(Human.create());
+var human = Human.create();
+console.log(human)
+human.say();
 
 var Man = Human.extend({
     walk: function () {
         console.log("walk");
     }
-})
+});
 
-
-console.log(Man.create({
+var man = Man.create({
     name: "Lee",
     age: 22
-}));
+});
+
+console.log(man);
+// 调用父类方法
+man.say();
+
+man.walk();
 ```
 
-进行再次改造
+[DEMO](http://jsfiddle.net/VsuA2/)
 
+nice!基本框架已经搭建起来，接下来继续补充功能
 
-上面的例子还有两个不足之处。
+1. 我们希望把实例化函数独立出来。也就是说当实例化一个类时，我们希望是调用一个叫做init的函数，而不是实例化自己。这样做的好处是灵活，我们甚至可以
 
-一是我们需要一个独立的初始化实例的函数，比如说叫做init。其实构造函数自己不就是一个初始化函数嘛？对，但如果有一个正式的构造函数会更能满足我们的某些需求，比如我们new一个构造函数，但是我们不想要它的实例，只想要实例上的prototype方法。这种情况就不必调用它的init函数。又或者这个init函数可以“借给”其他类使用
-
-不足之二是我们一个类需要能调用父类方法的机制，比如在子类的同名函数中吼一声this.callSuper，就能调用父类的同名方法。
+2. 需要一个子类能调用父类方法的机制，比如在子类的同名函数中吼一声this.callSuper，就能调用父类的同名方法。
 
 开始吧
 
