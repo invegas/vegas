@@ -1,14 +1,16 @@
 ##为什么要搭建自己的缓存管理模块？
 
-这个问题其实也是在问，为什么不使用现有的Cache存储系统，比如Redis，比如memcached。不是说Redis不够好，只是在处理某些场景中使用的Redis会显的太“笨重”了——Redis的优势之一在于能够使用于多进程共享，有完善的备份和恢复机制。但问题在于如果你的缓存仅供单个进程使用，单个node实例使用，并且是可以承受缓存的丢失，承受冷启动。那么是值得使用不到500行的代码来搭建一个自己的缓存模块。
+这个问题其实也是在问，为什么不使用现有的Cache存储系统，比如Redis，比如memcached。不是说Redis不够好，只是在处理某些场景中使用的Redis会显的太“笨重”了——Redis的优势之一在于能够供多进程共享，有完善的备份和恢复机制。但反过来想，如果你的缓存仅供单个进程，单个node实例使用，并且可以容忍缓存的丢失，承受冷启动。那么是值得用不到500行的代码来搭建一个速度更快的缓存模块。
 
-在node中做缓存最简单的作法莫过于使用一个Object对象，将缓存以key-value的形式存入这个对象中，并且这么做的理由只有一个，就是更快的存取速度。相比Redis通过TCP连接的形式与客户端进行通信，在程序中直接使用对象进行存储的效率会是Redis的40倍。文章的最后我会给出一个性能测试：10000次的set操作，Redis使用的时间为12.5秒左右，平均运算次数为(operations per second)为8013 o/s，而如果使用原生的Object对象，10000次操作只需要0.3秒，平均运算次数为322581 o/s
+在node中做缓存最简单的作法莫过于使用一个Object对象，将缓存以key-value的形式存入这个对象中，并且这么做的理由只有一个，就是更快的存取速度。相比Redis通过TCP连接的形式与客户端进行通信，在程序中直接使用对象进行存储的效率会是Redis的40倍。在文章的最后给出的完整的源代码中，有一个Redis与这个500行代码的性能对比测试：10000次的set操作，Redis使用的时间为12.5秒左右，平均运算次数为(operations per second)为8013 o/s，而如果使用原生的Object对象，10000次操作只需要0.3秒，平均运算次数为322581 o/s
 
 
 ##搭建自己的Cache模块需要解决什么问题
 
 ### 缓存淘汰算法
-介于缓存只能够有限的使用内存，任何Cache系统都需要一个如何淘汰缓存的方案（缓存淘汰算法，或者称之页面置换算法）。在node中无法像Redis那样设置使用内存大小（Redis中的maxmemory），所以我们只能通过缓存的个数（key-value对数）来间接对缓存大小进行控制。但这同时也赋予了我们另一自由，就是用何种算法来淘汰多余的缓存，以便能提高命中率。Redis的只提供五种淘汰方案(maxmemory-policy):
+介于缓存只能够有限的使用内存，任何Cache系统都需要一个如何淘汰缓存的方案（缓存淘汰算法，等同于页面置换算法）。在node中无法像Redis那样设置使用内存大小（Redis中的maxmemory），所以我们只能通过设置缓存的个数（key-value对数）来间接对缓存大小进行控制。但这同时也赋予了我们另一自由，就是用何种算法来淘汰多余的缓存，以便能提高命中率。
+
+Redis的只提供五种淘汰方案(maxmemory-policy):
 
 - volatile-lru: remove a key among the ones with an expire set, trying to remove keys not recently used(根据过期时间，移除最长时间没有使用过的).
 - volatile-ttl: remove a key among the ones with an expire set, trying to remove keys with short remaining time to live(根据过期时间，移除即将过期的).
@@ -16,7 +18,7 @@
 - allkeys-lru: like volatile-lru, but will remove every kind of key, both normal keys or keys with an expire set(无论是否有过期时间，根据LRU原则来移除).
 - allkeys-random: like volatile-random, but will remove every kind of keys, both normal keys and keys with an expire set(无论是否有过期时间，随机移除).
 
-可见Redis的移除策略大部分是根据缓存的过期时间和LRU(Least Recently Used，最近最少使用，，其核心思想是“如果数据最近被访问过，那么将来被访问的几率也更高”)算法来移除的。但过期时间和LRU算法并非适用于任何的业务逻辑：1.有的业务可以无需给缓存设置过期时间；2.在某些场景中LFU(Least Frequently Used, 最近最多使用，其核心思想是“如果数据过去被访问多次，那么将来被访问的频率也更高”)算法比LRU更优，能够减少缓存缓存污染，同时正因为LRU算法存在一定的缺陷（存在热点数据时，LRU的效率很好，但偶发性的、周期性的批量操作会导致LRU命中率急剧下降），才会有一些列LRU算法的变形，比如LRU-K, Two queues, Multi Queue等。
+可见Redis的移除策略大部分是根据缓存的过期时间和LRU(Least Recently Used，最近最少使用，，其核心思想是“如果数据最近被访问过，那么将来被访问的几率也更高”)算法。但过期时间和LRU算法并非适用于任何的业务逻辑：1.有的业务可以无需给缓存设置过期时间；2.在某些场景中LFU(Least Frequently Used, 最近最多使用，其核心思想是“如果数据过去被访问多次，那么将来被访问的频率也更高”)算法比LRU更优，能够减少缓存缓存污染，同时正因为LRU算法存在一定的缺陷（存在热点数据时，LRU的效率很好，但偶发性的、周期性的批量操作会导致LRU命中率急剧下降），才会有一系列的LRU算法的变形，比如LRU-K, Two queues, Multi Queue等。
 
 所以我们决定在缓存模块中嵌入多个淘汰算法，不仅仅如此，我还设想将当用户不确定他所需要的淘汰算法时，我们可以同时运行多个算法，比如对前100000次get操作的各个算法进行命中率统计，100000次操作之后自动切换至命中率最高的算法。
 
@@ -81,7 +83,7 @@ head => key1 <=> key2 <=> key3 <=> ...<=> keyn <= tail
 
 那么如何将索引与缓存关联起来呢？Key吗？根据用户传入的key再去索引链表中查找位置吗？这又回到了遍历，并且比数组更耗费时间。
 
-总所周知，链表是通过无数个node节点以前后指针的形式连接起来的，考虑到避免遍历，便于插入，删除等操作，该链表应该是双向链表，每一个key在链表中对应一个node结构：
+众所周知，链表是通过无数个节点以前后指针的形式连接起来的，考虑到避免遍历，便于插入，删除等操作，该链表应该是双向链表，每一个key在链表中对应一个节点结构为：
 
 ```
 var node = {
@@ -103,7 +105,7 @@ var cache = {
 }
 ```
 
-这样以来，当我们尝试get某个缓存时，我们能通过节点的引用（node）很快的得到该缓存在队列中的位置，并且跳过遍历，仅通过修改相关节点的指针，来对顺序进行调整。
+这样以来，当我们尝试get某个缓存时，我们能通过节点的引用（node）很快的得到该缓存在队列中的位置，并且跳过遍历，仅通过修改相关节点的指针，来对队列的顺序进行调整，以便能即使反馈数据的冷热程度。
 
 ###缓存逻辑与算法的分离
 
@@ -127,14 +129,288 @@ var cache = {
 |-expire--|---del------|---del
 ```
 
-注意到在Algorithm算法层，虽然提供的接口都非常简单，仅有插入链表(insert)，更新链表(update)，删除节点(del)三个接口，但内部的实现却大相径庭，实质上是对链表各个方法的调用。
+注意到在Algorithm算法层，虽然每个算法提供的接口都看上去相同并且非常简单，仅有插入链表(insert)，更新链表(update)，删除节点(del)三个接口，内部的实现却大相径庭，但实质上是对链表各个方法的调用。
 
-以插入链表(insert)为例，在LRU算法中最近访问的数据在队首，较长时间未访问数据靠近队尾，所以数据务必从队首进，队尾出，所以应该调用的是队首插入的unshift方法，并且插入之后如果队列超长，那么需要调用pop方法将队尾元素弹出。
+以插入链表(insert)为例，在LRU算法中最近访问的数据在队首，较长时间未访问数据靠近队尾，所以数据务必从队首进，队尾出，所以插入队首时应该调用的是链表的unshift方法，并且插入之后如果队列超长，那么需要调用链表的pop方法将队尾元素弹出。
 
 而LFU算法不同，虽然热门数据同样待在队首，但介于新数据的访问次数少热度低，应该从队尾进，所以插入时应该调用的方法是push，并且如果无位置插入，需要先将队尾的冷门数据用方法pop弹出。所以LFU队列的数据是队尾进，队尾出。
 
 ##实现
 
-当数据结构，接口，层次决定好之后，实现不过就是按部就班的事情了
+当数据结构，接口，架构决定好之后，实现不过就是按部就班的事情了。
+
+在这里只是把一些关键步骤代码列出来，并且给予适当的注释。
+
+链表的实现在这里就忽略了，这部分内容可以参考数据结构的相关书籍
+
+###Cache.set
+
+```
+var set = function (key, value, expire) {
+    // 缓存对象
+    var _cache = this.cache;
+    // 索引链表
+    var _queue = this.queue;
+
+    // 如果已经存在该值，则重新赋值，更新过期时间
+    if (_cache[key]) {
+
+        // 重新赋值
+        _cache[key].value = value;
+        _cache[key].expire = expire;
+
+        // 更新之后，同时也要更新索引队列
+        // 但在这里无需关心细节，LRU与LFU的更新规则不同
+        // 只需调用统一的接口
+        _queue.update(_cache[key].node);
+
+    // 如果新插入缓存
+    } else {
+
+        var returnNode = _queue.insert(key);
+        /*
+            注意上面的returnNode，
+            var returnNode = {
+                node: node, // 新插入索引节点的引用
+                delArr: delArr // 需要删除的缓存key
+            }
+            1. 它并不仅仅返回被插入索引节点的引用
+            2. 它还返回了一个数组，存储了因为插入新节点，而导致链表超长
+            而需要被删除缓存的key
+        */
+
+        _cache[key] = {
+            value: value,
+            expire: expire,
+            /*
+                除了value和过期时间外
+                还要存储多余的信息
+                比如插入缓存的时间，以便对比是否过期
+            */
+            insertTime: +new Date(),
+            node: returnNode.node
+        }        
+
+        // 删除多余缓存
+        returnNode.delArr.forEach(function (key) {
+            _cache[key] = null;
+        });
+    }
+}
+```
+有一点需要注意，为什么在最后我会用置为null `_cache[key] = null`来删除缓存，而不用更明显的`delete _cache[key]`？要知道delete并非强制将`_cache[key]`引用的对象的内存释放，因为在V8中我们是无法强制进行Garbage Collection（在其他引擎中应该也不行）。所以置为null与delete，两者的原理其实相同，删除的都是`_cache[key]`的引用（详细原理可以参考文章最后给出的参考文献）。
+
+使用null的原因只有一个，那就是更高的效率，你可以在node或者浏览器中执行下面这段代码
+
+```
+var maxRound = 100 * 100 * 20;
+(function () {
+    var obj = {};
+
+    for (var i = 0; i < maxRound; i++) {
+        obj["key_" + i] = "value_"+ i;
+    }
+    
+    var start = +new Date();
+
+    for (var key in obj) {
+        delete obj[key];
+        //obj[key] = null;
+    }
+
+    var end = +new Date();
+
+    console.log("Delete | Total cost:", end - start, "ms");
+})()
+```
+你可以把代码中注释的`obj[key] = null;`与`delete obj[key];`互换，来对比执行效率，很明显置为null会比delete节约一半时间。
+
+###Cache.get
+
+```
+var get = function (key) {
+    var _cache = this.cache;
+    var _queue = this.queue;
+
+    // 如果存在该值
+    if (_cache[key]) {
+        var insertTime = _cache[key].insertTime;
+        var expire = _cache[key].expire;
+        var node = _cache[key].node;
+        var curTime = +new Date();
+
+        // 如果不存在过期时间 或者 存在过期时间但尚未过期
+        if (!expire || (expire && curTime - insertTime < expire)) {
+
+            // 已经使用过，更新索引队列
+            _queue.update(node);
+
+            // 只需返回用户所要的value
+            return _cache[key].value;
+
+        // 如果已经过期
+        } else if (expire && curTime - insertTime > expire) {
+
+            // 从队列中删除
+            _queue.del(node);
+            return null
+        }
+
+    } else {
+        return null;
+    }
+}
+```
+
+###LFU算法中更新索引:
+
+```
+var update = function (node) {
+    // 访问次数+1
+    node.count++;
+
+    var prevNode = node.prev;
+    var nextNode = node.next;
+    var queue = this.queue;
+
+    // 高访问频率的节点在队首
+    // 或者说一个节点的前节点的访问次数应该比当前节点高
+    // 如果相反了，表示不需要调换位置
+    // 直到前节点的访问次数应该比当前节点高
+    if (prevNode && prevNode.count < node.count) {
+
+        while (prevNode && prevNode.count < node.count) {
+            // 与前一个节点调换位置
+            queue.forward(node);
+            prevNode = node.prev;
+        }
+    // 情况与上一个if分支刚好相反
+    // 一个节点的后节点的访问次数应该比当前节点低
+    } else if (nextNode && nextNode > node.count) {
+
+        while (nextNode && nextNode > node.count) {
+            queue.backward(node);
+            nextNode = node.next;
+        }
+    }
+}
+```
+##根据命中率选择适合的算法
+
+如果你不确定你的业务适合哪一种的，我们可以加入机器学习的机制，根据前三万次访问的命中率来选择哪一种算法：
+
+```
+var Cache_LRU = null, 
+    Cache_LFU = null,
+    // Cache_FIN用来指向最终选择的算法
+    Cache_FIN = null;
+
+// 统计前3万次
+var round = 100 * 100 * 3;
+
+var Manage = {
+    // 独立统计每个算法的成功次数
+    // total表示该算法get方法被调用次数
+    // suc表示成功次数
+    "lru": {
+        cache: Cache.createCache("LRU", 100 * 100 * 5),
+        suc: 0,
+        total: 0
+    },
+    "lfu": {
+        cache: Cache.createCache("LFU", 100 * 100 * 5),
+        suc: 0,
+        total: 0
+    }
+}
+
+exports.set = function (key, value, expire) {
+    // 如果已经结束了统计命中率的前三万轮
+    // 表示已经找到了合适的算法
+    if (!round) {
+        return Cache_FIN.set(key, value, expire);
+    }
+
+    // 用户的每次get与set实际上同时在对所有的算法同时做
+    // 同时有两份Cache在工作
+    for (var name in Manage) {
+        Manage[name].cache.set(key, value, expire);
+    }
+}
+
+exports.get = function (key) {
+    // 如果已经结束了统计命中率的前三万轮
+    // 表示已经找到了合适的算法
+    if (!round) {
+        return Cache_FIN.get(key);
+    }
+
+    var value = null;
+
+    // 测试每一个算法是否能获得请求的cache
+    for (var name in Manage) {
+        Manage[name].total++;
+        value = Manage[name].cache.get(key);
+        if (value) {
+            Manage[name].suc++;
+        }
+    }
+
+    // 如果测试完毕，算出命中率
+    if (!--round) {
+        var hitRate = {},
+        max = {
+            key: "",
+            rate: 0
+        };
+
+        for (var key in Manage) {
+            // 算法命中率
+            hitRate[key] = Manage[key].suc / parseFloat(Manage[key].total);
+
+            // 找到最高命中率
+            if (hitRate[key] > max["rate"]) {
+                max.key = key;
+                max.rate = hitRate[key];
+            }
+        }
+        // 找到合适的算法
+        Cache_FIN = Manage[max.key].cache;
+    }
+
+    return value;
+}
+
+```
+
+
+##结束
+
+正如本文开头所说，这只是一个简易的Cache模块，不适用多实例，跨进程的场景，甚至一些意想不到更复杂的场景。当然它还有一些提升的空间，比如可以加入更多的淘汰算法，可以加入备份机制。
+
+完整的代码已经放在github上了，包括文章中完整的代码片段与提及的性能测试：[https://github.com/hh54188/Node-Simple-Cache](https://github.com/hh54188/Node-Simple-Cache)
+
+参考文献：
+
+- [Javascript Style Tip: Use “in” and “delete”](http://foohack.com/2007/06/javascript-style-tip-use-in-and-delete/)
+
+- [Deleting Objects in JavaScript](http://stackoverflow.com/questions/742623/deleting-objects-in-javascript)
+
+- [delete](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/delete?redirectlocale=en-US&redirectslug=JavaScript%2FReference%2FOperators%2Fdelete)
+
+- [Understanding delete](http://perfectionkills.com/understanding-delete/)
+
+- [delete vs undefined vs null](http://jsperf.com/delete-vs-undefined-vs-null/3)
+
+- [What is the performance of Objects/Arrays in JavaScript? (specifically for Google V8)](http://stackoverflow.com/questions/8423493/what-is-the-performance-of-objects-arrays-in-javascript-specifically-for-googl)
+
+- [Garbage Collection](http://docstore.mik.ua/orelly/webprog/jscript/ch11_03.htm)
+
+- [Redis ignores maxmemory setting](http://stackoverflow.com/questions/7588843/redis-ignores-maxmemory-setting)
+
+- [Redis as an LRU cache Friday](http://oldblog.antirez.com/post/redis-as-LRU-cache.html)
+
+- [Redis configuration](http://redis.io/topics/config)
+
 
 
