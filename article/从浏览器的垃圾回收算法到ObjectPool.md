@@ -73,20 +73,223 @@ V8引擎的最外层使用的是这个算法，但是在年青一代和老一代
 
 假设我们已经将from和to空间互相交换过了，接下来需要做的如何找到“活着”的对象，并且将活着的对象转移到新的to空间上去：
 
-- 算法依次扫描被栈(stack)引用的堆(heap) 上的对象（至于栈和堆的关系，这么解释可能不太严谨，你暂且可以这么以为：栈上存放的是执行过程中的变量名称，而变量名称所引用的对象，分配的内存空间则存放在堆上）：
+- 算法依次扫描被栈(stack)引用的堆(heap) 上的对象（至于栈和堆的关系，可以参考C#的机制：数据类型被分为两种，值类型和引用类型，值类型只需要一段单独的内存，用于存储实际的数据，存在在栈上；引用类型需要两段内存，第一段存储实际的数据，它总是位于堆上，第二段是一个引用指向数据在堆中存放的位置，位于栈上）：
     - 如果对象还没有被转移到新的to空间上，那么就在to空间创建一份拷贝，并且将当前from空间的该对象修改为一个指向to空间拷贝的指针。并更新栈上引用的指针，指向新的拷贝；
     - 如果对象已经被转移到了新的to空间上，那么把栈上指向from的指针改为指向to上的新拷贝即可
 - 算法依次扫描已经转移到to上的对象，并且检查它们在from空间上的引用，重复上面的步骤
 
 #### Mark-compact algorithm(标记压缩算法)
 
-标记压缩算法是标记清除算法的一种变形，它主要解决的是标记清除之后内存空间空间碎片化不连续的问题。以基于图表(Table-based)的标记压缩算法为例：
+老一代的GC通常会让你的程序暂停几秒，但介于不是非常的平凡，还是可以接受的。
 
-- 标记与清除过程与Mark-and-sweep算法相同
-- 压缩过程从堆的底部（低位）向头部（高位）进行，每当扫描到一个被标记的对象，将它转移至第一个可用低位。并且将当前的移动记录插入至表(break table)中，该记录包括重置的位置，以及重置位置与原位置的差别。表的位置就放在压缩的堆中，但是该位置对其他对象来说是未被使用的。
-- 随着压缩的进行，
+标记压缩算法是标记清除算法的一种变形，它主要解决的是标记清除之后内存空间空间碎片化不连续的问题。以基于表(Table-based)的标记压缩算法为例：
+
+1. 标记与清除过程与Mark-and-sweep算法相同
+2. 压缩过程从堆的底部（低位）向头部（高位）进行，每当扫描到一个被标记的对象，将它转移至第一个可用低位。并且将当前的移动记录插入至表(break table)中，该记录包括重置的位置，以及重置位置与原位置的差别。表的位置就放在压缩的堆中，但是该位置对其他对象来说是未被使用的。
+3. 随着压缩的进行，被标记的对象不断的向低位移动，因此表占用的空间可会被征用，需要转移到新的空间
+4. 等到压缩完毕，堆中幸存的对象需要根据表的记录，来更新对其他对象的指针引用
+
+需要注意的是，表可能是不连续的(break)，因此在第三步中表可能只是某一部分在堆中移动。这样会导致表里的记录不是按堆中对象的顺序排列的。所以在压缩之后，需要对表进行一次排序。
+
+为了更好的理解压缩过程，可以将堆比作书架的一格，其中一部分放满了不同厚度的图书。空闲空间就是图书之间的空隙。压缩就是将所有图书朝一个方向推移，以弥合所有空隙。它从最靠近隔板的图书开始，将它推向隔板，然后将离隔板第二近的图书推向第一本图书，接着将第三本图书推向第二本图书，依此类推。最后，所有图书在一端，所有空闲空间在另一端。
+
+## Object Pool
+
+在文章的开头，我提到GC也是会占用资源影响到性能的。让我们来看一个实际的例子。
+
+首先我来模拟一个场景，想象一个街机平面射击游戏，玩家控制飞船不断的发射子弹攻击BOSS，每一轮发射10000颗子弹，同时每一轮发射的时候只有10%的子弹会击中BOSS而损失掉：
+
+```
+//  子弹
+var Bullet = function () {};
+var gun = [];
+// 射击
+var shoot = function () {
+    var num = 100  * 100;
+    for (var i = 0; i < num; i++) {
+        gun.push(new Bullet());
+    }
+};
+ 
+var shootAgain = function () {
+    
+    // 每次射击都会损失10%的子弹
+    for (var i = 0, len = parseInt(gun.length * 0.1); i < len ;i++) {
+        gun.shift();
+    }
+    shoot();
+    console.log("TOTAL LEN------>", gun.length);
+};
+ 
+ // 无限执行下去
+(function repeat() {
+    setTimeout(function () {
+        shootAgain();
+        repeat();
+    }, 100);            
+})();
+```
+
+如果你在Chrome中执行代码，并且在devtools中timeline中查看内存(memory标签下)的使用情况，你会看到类似于下图的锯齿图：
+
+![Alt text](http://www.html5rocks.com/en/tutorials/speed/static-mem-pools/fig1.jpg)
+
+每一次峰值意味着使用的内存不断的增长，同时峰值之后的回落意味着一个GC的发生，将无用的内存进行回收。
+
+![Alt text](http://www.html5rocks.com/en/tutorials/speed/static-mem-pools/fig2.jpg)
+
+就像开头说的那样，GC会影响你的性能，如何运行GC是由引擎自己决定的，你没有控制权，GC可以发生在代码执行的任何时候，并且会中断你的代码执行知道GC完成。
+
+如上图那样GC频繁发生的原因是因为频繁的创建和销毁对象，为了阻止这样的事情发生，其中一个办法是延长对象的寿命，尽可能的不去触发GC。因此我们可以利用Object Pool模式。
+
+Object Pool采取的是这样一种策略，在程序初始化时一次性创建相当数量的对象，处“池(pool)”中，当需要使用是不在创建新的对象，而是从池中获取，当对象使用完毕后，还回池中，以上面的子弹代码为例，我们可以增加两个存取子弹的方法：
+
+```
+// 使用中的子弹
+var activeBullets = [];
+// 池子 object pool
+var bulletPool = [];
+ 
+// 初始化创建20颗子弹，存入池中
+for (var i=0; i < 20; i++)
+    bulletPool.push( new Bullet() );
+ 
+// 获得子弹
+function getNewBullet()
+{
+    var b = null;
+ 
+    if (bulletPool.length > 0)
+        b = bulletPool.pop();
+    else 
+        // 如果池中对象不够用了，再增加新的对象
+        b = new Bullet();   
+ 
+    // 使用子弹
+    activeBullets.push(b);
+    return b;
+}
+ 
+// 释放对象，还回池中
+function freeBullet(b)
+{
+    for (var i=0, l=activeBullets.length; i < l; i++)
+        if (activeBullets[i] == b)
+            array.slice(i, 1);
+    
+    bulletPool.push(b);
+}
+```
+我们可以进一步的将Object Pool模式抽象出来，封装成一个lib，以
+
+```
+var ObjectPool = (function() {
+
+    var ObjectPool = function(Cls) {
+
+        // 池子里的对象必须是同一类，
+        // 所以你首先要传入一个构造函数        
+
+        this.cls = Cls;
+
+        // metrics用于记录pool的当前状态
+        // 比如 totalalloc(总已分配数)、 totalfree(可用)
+        this.metrics = {};
+
+        // 重置池子
+        this._clearMetrics();
+
+        this._objpool = [];
+    };
+
+    ObjectPool.prototype = {
+        // 分配
+        alloc: function () {
+            var obj;
+
+            // 如果池中已无对象可供分配
+            if (this._objpool.length == 0) {
+
+                obj = new this.cls();
+                this.metrics.totalalloc++;
+
+            } else {
+
+                obj = this._objpool.pop();
+                this.metrics.totalfree--;
+            }
+
+            obj.init.apply(obj, arguments);
+
+            return obj;
+        },
+        // 释放对象
+        free: function(obj) {
+            var k;
+
+            this._objpool.push(obj);
+
+            this.metrics.totalfree++;
+            // 对象还回池中后，
+            // 还需要对对象进行清理，清除脏数据
+            for (k in obj) { 
+                delete obj[k]; 
+            }
+
+            // 重新初始化
+            obj.init.call(obj);
+        },
+        // 垃圾回收
+        // 在Object Pool模式下，垃圾回收便显得多余了
+        // 如果有需求的话，还是提供这样一个接口
+        collect: function () {
+            this._objpool = [];
+
+            var inUse = this.metrics.totalalloc - this.metrics.totalfree;
+            // 记录下当前未被回收但已分配的个数
+            this._clearMetrics(inUse);
+        },
+        _clearMetrics: function (allocated) {
+            this.metrics.totalalloc = allocated || 0;
+            this.metrics.totalfree = 0;            
+        }
+
+    }
+
+    return ObjectPool
+
+})();
 
 
+```
+
+有了上面的类库，我的子弹代码可以继续改进：
+
+```
+var Bullet = function () {};
+// 创建 Object Pool
+var bulletPool = new ObjectPool(Bullet);
+// 新的子弹
+var bullet = bulletPool.alloc();
+// 销毁子弹
+bullPool.free(bullet)
+
+```
+
+最后要说明的是Object Pool并非万能的。如果对于一些性能要求较高的大型应用，预先的一次性创建大批对象同样是一种代价；而对于小型应用而已，因为Object Pool基本不会对内存进行回收，所以会长时间大量占用内存，使用Object Pool之后内存的使用情况应该如下图所示：
+
+![Alt text](http://www.html5rocks.com/en/tutorials/speed/static-mem-pools/fig3.jpg)
+
+参考资料
+
+- [Effectively managing memory at Gmail scale - HTML5 Rocks](http://www.html5rocks.com/en/tutorials/memory/effectivemanagement/)
+- [Static Memory Javascript with Object Pools - HTML5 Rocks](http://www.html5rocks.com/en/tutorials/speed/static-mem-pools/)
+- [High-Performance, Garbage-Collector-Friendly Code - Build New Games](http://buildnewgames.com/garbage-collector-friendly-code/)
+- [Garbage Collection (JavaScript: The Definitive Guide, 4th Edition)](http://docstore.mik.ua/orelly/webprog/jscript/ch11_03.htm)
+- [Mark-compact algorithm - Wikipedia, the free encyclopedia](http://en.wikipedia.org/wiki/Mark-compact_algorithm)
+- [Cheney's algorithm - Wikipedia, the free encyclopedia](http://en.wikipedia.org/wiki/Cheney%27s_algorithm)
+- [Garbage collection (computer science) - Wikipedia, the free encyclopedia](http://en.wikipedia.org/wiki/Garbage_collection_(computer_science))
+- [Memory Management - JavaScript | MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Memory_Management)
 
 
 
