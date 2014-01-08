@@ -152,7 +152,7 @@ create: function () {
     todos.add(model);
 }
 ```
-虽然这种方法比较原始，但不应该认为它是一种低级的解决方案。当然接下来我们会在Emberjs和Knockoutjs看到一些其他的解决方法，从职责上来说，他们的工作是一致的。
+虽然这种方法比较原始，但不应该认为它是一种低级的解决方案。当然接下来我们会在Emberjs和Knockoutjs看到一些其他的解决方法，从职责上来说，他们的目的是一致的。
 
 回想在文章开头介绍的ASP.NET MVC的一个action，它做了哪些事情：
 ```
@@ -164,4 +164,99 @@ create: function () {
         return View(album);
     }
 ```
-用户的操作会涉及数据和视图更改，视图通常是被数据影响，是可视化的数据。上面的代码很好的说明了这一点，并且视图的更新和数据的操作都是在同一个action里完成的。
+用户的操作会涉及数据和视图更改，一般来说视图会被动一些，Model的修改可以通知视图的更新，当然视图也可以向Model请求数据（注意从这里可以看出Model与View可以直接通信而非通过Controller）。上面的代码很好的说明了这一点，并且视图的更新和数据的操作都是在同一个action里完成。
+
+但是前端MVC框架却不这么做。
+
+因为在前后端代码与视图的关系是不同的，后端代码生产出页面交给浏览器之后，基本上就不关心也无法关心页面了；而在前端不同，虽然前端也有“生产”这么一说（比如说使用模板引擎），但前端代码时刻都可以对Html代码和DOM元素进行监听和操作。
+
+上面的Todo里Backbone是这么做的：
+
+```
+var AppView = Backbone.View.extend({
+    el: $("body"),
+    initialize: function () {
+        // 在初始化该视图时(执行当前initialize函数)，
+        // 它会对这个应用唯一的Model层，就是Collection`todos`进行监听；
+
+        // 更准确来说是对它的新增操作进行监听
+        // 一旦发现数据有新增操作，那么更新视图(调用addOne方法)
+        this.listenTo(todos, 'add', this.addOne);
+    },  
+    addOne: function(todo) {
+        var view = new ItemView({
+            model: todo
+        });
+        this.$("#list").append(view.render().el);
+    },
+```
+这个时候你再看看这个AppView的代码会觉得有一些饶，因为我们明明可以在create方法中，在新增数据之后立即调用更新视图的方法:
+```
+create: function () {
+    var model = new Todo({
+        title: this.$("#input").val()
+    });
+    todos.add(model);
+    // 更新视图
+    // this.addOne(model)
+}
+```
+但我想这么做的原因无非是为了解耦。考虑今后可能增加多个新增数据的入口(如create1, create2, create3)，在每一个新增方法中调用更新视图的方法会增加代码的维护量，那么就不如采用这种观察者模式(Observer pattern)(或者采用fire事件机制也行)，只在指定处更新视图。
+
+不仅仅Backbone采用这样的机制，我们也可以看看todomvc中简化过后的Emberjs代码，采用的也是同样机制：
+
+**Html:**
+```
+<script type="text/x-handlebars" data-template-name="index">
+    {{ input type="text" value=title }}
+    <button {{action "create"}}>Add</button>
+    <ul>
+    {{#each item in content itemController="todo"}}
+        <li>
+            <span>{{item.title}}</span>
+            <button {{action "remove"}}>delete</button>
+        </li>
+    {{/each}}
+    </ul>
+</script>
+```
+
+**Javascript:**
+```
+App = Ember.Application.create({});
+
+App.ApplicationAdapter = DS.LSAdapter.extend();
+
+App.Todo = DS.Model.extend({
+    title: DS.attr("string")
+})
+
+App.IndexRoute = Ember.Route.extend({
+    setupController: function(controller) {
+        var todos = this.store.find('todo');
+        controller.set("content", todos);
+    }
+});
+
+App.TodoController = Ember.ObjectController.extend({
+    actions: {
+        remove: function () {
+            var todo = this.get('model');
+            todo.deleteRecord();
+            todo.save();
+        }
+    }
+})
+
+App.IndexController = Ember.ArrayController.extend({
+    actions: {
+        create: function () {
+            var title = this.get("title");
+            var todo = this.store.createRecord('todo', {
+                title: title
+            });
+            todo.save();
+        }
+    }
+});
+```
