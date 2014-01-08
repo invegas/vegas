@@ -71,7 +71,9 @@ var TodoRouter = Backbone.Router.extend({
 
 ### Observer Pattern + MV
 
-Google程序员[Addy Osmani](http://addyosmani.com/blog/)(同时也是[Learning JavaScript Design Patterns](http://addyosmani.com/resources/essentialjsdesignpatterns/book/)的作者)有一个非常著名的项目——[Todomvc](http://todomvc.com/)。他用所有的前端MVC框架将Todo List这个app重写了一遍。我们看看他的解决方法是什么
+Google程序员[Addy Osmani](http://addyosmani.com/blog/)(同时也是[Learning JavaScript Design Patterns](http://addyosmani.com/resources/essentialjsdesignpatterns/book/)的作者)有一个非常著名的项目——[Todomvc](http://todomvc.com/)。他用所有的前端MVC框架将Todo List这个app重写了一遍。我们看看他的解决方法是什么。
+
+#### Backbone
 
 以Backbone.js为例，为了方便说明，在他的基础上我再次进行了简化，简化到只有50行代码，只保留了新增和删除方法。实际演示效果在[这里](http://jsfiddle.net/JPL94/7/)：
 
@@ -203,21 +205,46 @@ create: function () {
 ```
 但我想这么做的原因无非是为了解耦。考虑今后可能增加多个新增数据的入口(如create1, create2, create3)，在每一个新增方法中调用更新视图的方法会增加代码的维护量，那么就不如采用这种观察者模式(Observer pattern)(或者采用fire事件机制也行)，只在指定处更新视图。
 
-不仅仅Backbone采用这样的机制，我们也可以看看todomvc中简化过后的Emberjs代码，采用的也是同样机制：
+ItemView采用的也是同样机制，就不在这里赘述了。
+
+值得一提的是，todomvc Backbone的原版本中仍然保留了Router服务：
+
+```
+var TodoRouter = Backbone.Router.extend({
+    routes: {
+        '*filter': 'setFilter'
+    },
+
+    setFilter: function (param) {
+        // Set the current filter to be used
+        app.TodoFilter = param || '';
+
+        // Trigger a collection filter event, causing hiding/unhiding
+        // of Todo view items
+        app.todos.trigger('filter');
+    }
+});
+```
+如果有兴趣浏览一下原版代码，你会发现这只是作为更新视图的触发器而已。
+
+#### Ember.js
+
+不仅仅Backbone采用这样的机制，我们也可以看看todomvc中简化过后的Emberjs代码，采用的也是同样机制，线上[DEMO](http://jsfiddle.net/GESP3/)：
+
 
 **Html:**
 ```
 <script type="text/x-handlebars" data-template-name="index">
-    {{ input type="text" value=title }}
-    <button {{action "create"}}>Add</button>
-    <ul>
-    {{#each item in content itemController="todo"}}
-        <li>
-            <span>{{item.title}}</span>
-            <button {{action "remove"}}>delete</button>
-        </li>
-    {{/each}}
-    </ul>
+{{ input type="text" value=title }}
+<button {{action "create"}}>Add</button>
+<ul>
+{{#each item in content itemController="todo"}}
+    <li>
+        <span>{{item.title}}</span>
+        <button {{action "remove"}}>delete</button>
+    </li>
+{{/each}}
+</ul>
 </script>
 ```
 
@@ -260,3 +287,138 @@ App.IndexController = Ember.ArrayController.extend({
     }
 });
 ```
+这一段代码不做详解，与前一个Backbone的机制是一致的：
+
+1. 如果你觉得Backbone中将用户行为与方法联系起来的做法比较原始的话，不妨看看Emberjs的解决方法，它直接写进需要编译的模板中：
+
+```
+// 指定调用IndexController中的create的方法(action)响应按钮的点击事件
+<button {{action "create"}}>Add</button>
+......
+
+// 指定TodoController中的remove的方法(action)响应
+<button {{action "remove"}}>delete</button>
+
+```
+
+
+2. 在新增事项的create方法中，它做的也仅仅是对Model层进行数据操作，
+
+```
+create: function () {
+    var title = this.get("title");
+    var todo = this.store.createRecord('todo', {
+        title: title
+    });
+    todo.save();
+}
+```
+但你不用调用任何的视图方法，视图已经随数据更新了。这不也是一种Observer模式嘛。
+
+3. 值得一提的是Ember.js中的Router有一些特别，除了一般路由拥有的定义URL规则之外，它还负责向对应的Controller提供model层数据。
+
+
+
+### MVP
+
+Addy的解决方案是Observer Pattern。但我更提倡另一种解决方案，就是MVP(Model-View-Presenter)模式。
+
+为什么会有MVC，MVP，甚至MVVM？三个模式其实主要围绕的是两个问题：
+
+1. 一是Model与View之间的通信问题, 完全隔离的?单向通信还是双向通信?
+2. 二是M-V-XX中的"XX"需要完成哪些功能, 简单流程调度? 还是复杂规则处理? 
+
+你可以这么理解MVP模式：
+
+>用户的交互逻辑的处理流程定义在Presenter中，但是具体的实现并不是完全在Presenter中。View和Presenter采用单向的沟通方式。View单纯地将用户的交互请求汇报给Presenter；Presenter接收到请求之后，整合相应的资源、执行相应的处理逻辑。对处理流程的某一个步骤，如果设置到业务逻辑和数据模型，则调用Model，如果涉及到对视图的更新，还会调用View。Presenter和View接口都应该只包含返回类型为void的方法即可
+
+同时参考[Design Rules for Model-View-Presenter](http://kjellsj.blogspot.com/2008/05/design-rules-for-model-view-presenter.html)，其中有一些规则非常重要：
+
+1. View不允许通过Presenter直接调用Model和Service，并且Presenter的方法应该是不具有返回值的；
+
+2. Presenter必须通过View接口的方式调用View
+
+3. 除了对View接口成员的实现外，View中的其他方法不应该是public的；
+
+4. View接口的成员应该仅限于方法，不应该包含属性；
+
+5. 所有的数据应用保持在Model中
+
+所以我们的目标非常的简单，分别定义三个层：
+
+1. Model层：提供操作数据的接口
+
+2. View层：提供更新视图的接口
+
+3. Presenter层：定义用户的交互逻辑与流程，但所有与数据操作和视图的更新都通过调用Model层与View层的接口实现
+
+最后需要明确一个问题。
+
+```
+var Todo = Backbone.Model.extend({
+
+});
+
+var Todos = Backbone.Collection.extend({
+    model: Todo
+});
+
+var ItemView = Backbone.View.extend({
+    tagName: "li",
+    template: _.template($("#item-template").html()),
+    render: function (container) {
+        this.$el.html(this.template(this.model.toJSON()));
+        container.append(this.$el);
+    },
+    events: {
+        "click .delete": "_clear"
+    },
+    _clear: function () {
+        this.$el.trigger("delete", this);
+    }
+});
+
+var AppView = Backbone.View.extend({
+    el: $("body"),
+    events: {
+        "click #create": "_create"
+    },
+    _create: function () {
+        var data = {
+            title: this.$("#input").val()
+        };
+
+        this.$el.trigger("create", data);
+    }   
+})
+
+var Presenter = Backbone.View.extend({
+    el: $("body"),
+    initialize: function () {
+
+        this.appView = new AppView({
+            container: $("#list")
+        });
+        this.todos = new Todos;
+        var _this = this;
+
+        this.$el.on("create", function (e, attrs) {
+            var model = new Todo(attrs);
+            _this.todos.add(model);
+            var itemView = new ItemView({
+                model: model
+            })
+            itemView.render($("#list"));
+        });
+
+        this.$el.on("delete", function (e, view) {
+            _this.todos.remove(view.model);
+            view.remove();
+        });        
+    }
+})
+
+var p = new Presenter;
+```
+
+
